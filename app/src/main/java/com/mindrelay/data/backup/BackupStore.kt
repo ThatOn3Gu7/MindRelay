@@ -235,14 +235,15 @@ class BackupStore(private val db: AppDatabase) {
         internal fun validateIntegrity(d: BackupDocument) {
         fun fail(msg: String): Nothing = throw ImportResult.ParseError(msg)
 
-        // Positive + unique ids per collection.
-        val idSets: List<Pair<String, Set<Long>>> = listOf(
-            "projects" to d.projects.map { it.id }.toSet(),
-            "sessions" to d.sessions.map { it.id }.toSet(),
-            "entries" to d.entries.map { it.id }.toSet(),
-            "captures" to d.captures.map { it.id }.toSet(),
-            "memories" to d.memories.map { it.id }.toSet(),
-            "tasks" to d.tasks.map { it.id }.toSet(),
+        // Positive + unique ids per collection. Kept as lists so duplicates are
+        // detectable; referential checks below build their own sets.
+        val idSets: List<Pair<String, List<Long>>> = listOf(
+            "projects" to d.projects.map { it.id },
+            "sessions" to d.sessions.map { it.id },
+            "entries" to d.entries.map { it.id },
+            "captures" to d.captures.map { it.id },
+            "memories" to d.memories.map { it.id },
+            "tasks" to d.tasks.map { it.id },
         )
         for ((name, ids) in idSets) {
             val dup = ids.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
