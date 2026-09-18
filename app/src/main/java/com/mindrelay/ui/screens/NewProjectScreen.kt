@@ -50,7 +50,6 @@ import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.components.MindTextField
-import com.mindrelay.ui.components.MindTopBar
 import com.mindrelay.ui.components.PillButton
 import com.mindrelay.ui.components.SectionLabel
 

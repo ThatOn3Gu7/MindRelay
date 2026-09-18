@@ -27,6 +27,9 @@ change, newest first within a category.
   `ConfirmDialog` at the wrong package.
 - Fixed a lint error in Search where an `AnimatedContent` content lambda ignored
   its target filter state.
+- Fixed compile errors from the latest screen redesigns: six screens imported
+  `MindTopBar` from `ui.components` (it lives in `ui.screens`), and New Memory
+  passed a `filled` argument that `MindDropdown` doesn't accept.
 
 ### Improved
 
