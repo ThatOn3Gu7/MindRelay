@@ -164,7 +164,7 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                 icon = Icons.Rounded.FolderOpen,
                 onClick = {
                     val pid = capture.projectId ?: projects.firstOrNull { it.status == com.mindrelay.data.model.ProjectStatus.ACTIVE }?.id
-                    ??: projects.firstOrNull()?.id
+                        ?: projects.firstOrNull()?.id
                     if (pid != null) {
                         vm.launchAndRun(
                             block = {
