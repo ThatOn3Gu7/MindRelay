@@ -15,6 +15,12 @@ interface TaskDao {
     @Query("SELECT * FROM tasks ORDER BY done ASC, createdAt DESC")
     fun all(): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks WHERE projectId = :projectId")
+    fun byProject(projectId: Long): Flow<List<TaskEntity>>
+
+    @Query("SELECT * FROM tasks WHERE captureId = :captureId")
+    fun byCapture(captureId: Long): Flow<List<TaskEntity>>
+
     @Insert
     suspend fun insert(item: TaskEntity): Long
 

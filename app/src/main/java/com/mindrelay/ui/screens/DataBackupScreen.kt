@@ -29,8 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mindrelay.nav.MindNavController
-import com.mindrelay.nav.MindScreen
-import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.components.BodyListItem
 import com.mindrelay.ui.components.ExpressiveCard
@@ -68,14 +66,18 @@ fun DataBackupScreen(vm: AppViewModel, nav: MindNavController) {
             scope.launch {
                 val result = vm.backup.import(context, uri)
                 when (result) {
-                    is com.mindrelay.data.backup.ImportResult.Ok ->
-                        snackbar.showSnackbar("Imported ${result.projects} projects, ${result.captures} captures, ${result.memories} memories")
+                    is com.mindrelay.data.backup.ImportResult.Ok -> {
+                        val extras = if (result.warnings.isNotBlank()) " · ${result.warnings}" else ""
+                        snackbar.showSnackbar("Imported ${result.projects} projects, ${result.captures} captures, ${result.memories} memories$extras")
+                    }
                     is com.mindrelay.data.backup.ImportResult.ParseError ->
                         snackbar.showSnackbar(result.reason)
                 }
             }
         }
     }
+    var restorePreview by remember { mutableStateOf<com.mindrelay.data.backup.Snapshot?>(null) }
+
     val restoreLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -83,8 +85,9 @@ fun DataBackupScreen(vm: AppViewModel, nav: MindNavController) {
             scope.launch {
                 val snapshot = vm.backup.inspect(context, uri)
                 if (snapshot == null) {
-                    snackbar.showSnackbar("Invalid backup file")
+                    snackbar.showSnackbar("Invalid backup file — nothing was changed")
                 } else {
+                    restorePreview = snapshot
                     pendingRestore = uri
                     restoreConfirm = true
                 }
@@ -95,7 +98,7 @@ fun DataBackupScreen(vm: AppViewModel, nav: MindNavController) {
     Column(Modifier.fillMaxSize()) {
         MindTopBar(
             title = "Data & Backup",
-            onBack = { nav.navigate(MindScreen.SETTINGS, MindTransition.SLIDE_RIGHT) },
+            onBack = { nav.pop() },
         )
         SnackbarHost(snackbar)
         Column(
@@ -122,20 +125,20 @@ fun DataBackupScreen(vm: AppViewModel, nav: MindNavController) {
             )
             BodyListItem(
                 headline = "Import backup",
-                supporting = "Validate schema before merging",
+                supporting = "Validate the whole file, then merge it in (existing data is kept)",
                 icon = Icons.Rounded.FileUpload,
                 onClick = { importLauncher.launch(arrayOf("application/json", "text/*")) },
             )
             BodyListItem(
                 headline = "Restore from backup",
-                supporting = "Preview before replacing data",
+                supporting = "Preview what it contains before replacing local data",
                 icon = Icons.Rounded.Restore,
                 onClick = { restoreLauncher.launch(arrayOf("application/json", "text/*")) },
             )
 
             SectionLabel("Backup includes", size = 14, modifier = Modifier.padding(top = 12.dp))
             Text(
-                "• Projects & current state\n• Sessions & chronological entries\n• Memories with tags and revisit dates\n• Captures with provenance\n• Tasks\n• All relationships and metadata",
+                "• Projects & current state\n• Sessions & chronological entries\n• Memories with tags and revisit dates\n• Captures with provenance\n• Tasks\n• All relationships and metadata\n\nSettings (theme, capture defaults, reminders) are stored separately as preferences and are NOT part of the JSON backup.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -153,9 +156,21 @@ fun DataBackupScreen(vm: AppViewModel, nav: MindNavController) {
     if (restoreConfirm) {
         val uri = pendingRestore
         if (uri != null) {
+            val preview = restorePreview
             ConfirmDialog(
                 title = "Restore from backup?",
-                text = "This previews and then replaces all current local data with the selected backup.",
+                text = buildString {
+                    append("This replaces ALL current local data with the selected backup.")
+                    append("\n\nThe backup contains:\n")
+                    if (preview != null) {
+                        append("• ${preview.projects} projects\n")
+                        append("• ${preview.sessions} sessions\n")
+                        append("• ${preview.captures} captures\n")
+                        append("• ${preview.memories} memories\n")
+                        append("• ${preview.tasks} tasks\n")
+                    }
+                    append("\nA safety backup of your current data is saved before restoring.")
+                },
                 confirmLabel = "Restore",
                 destructive = true,
                 onConfirm = {
@@ -163,12 +178,15 @@ fun DataBackupScreen(vm: AppViewModel, nav: MindNavController) {
                     scope.launch {
                         val result = vm.backup.restore(context, uri)
                         when (result) {
-                            is com.mindrelay.data.backup.RestoreResult.Ok -> snackbar.showSnackbar("Data restored")
+                            is com.mindrelay.data.backup.RestoreResult.Ok -> snackbar.showSnackbar("Data restored (safety backup saved locally)")
                             is com.mindrelay.data.backup.RestoreResult.Failed -> snackbar.showSnackbar(result.reason)
                         }
                     }
                 },
-                onDismiss = { restoreConfirm = false },
+                onDismiss = {
+                    restoreConfirm = false
+                    restorePreview = null
+                },
             )
         }
     }

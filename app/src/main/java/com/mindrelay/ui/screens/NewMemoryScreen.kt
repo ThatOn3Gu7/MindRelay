@@ -167,34 +167,40 @@ fun NewMemoryScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long? = 
                 onClick = {
                     val original = existing
                     val revisitMillis = revisitDay?.let { com.mindrelay.util.epochDayToMillis(it) }
-                    vm.launch {
-                        val targetId = if (editing && original != null) {
-                            repo.updateMemory(
-                                original.copy(
-                                    title = title.trim(),
-                                    content = content.trim(),
+                    var targetId: Long? = null
+                    vm.launchAndRun(
+                        block = {
+                            if (editing && original != null) {
+                                repo.updateMemory(
+                                    original.copy(
+                                        title = title.trim(),
+                                        content = content.trim(),
+                                        type = optionToType(type),
+                                        tags = tags,
+                                        projectId = linkedProjectId,
+                                        revisitAt = revisitMillis,
+                                    )
+                                )
+                                targetId = original.id
+                            } else {
+                                targetId = repo.saveMemory(
+                                    title = title,
+                                    content = content,
                                     type = optionToType(type),
                                     tags = tags,
                                     projectId = linkedProjectId,
                                     revisitAt = revisitMillis,
                                 )
+                            }
+                            null
+                        },
+                        andThen = {
+                            nav.resetTo(
+                                listOf(com.mindrelay.nav.MindRoute(MindScreen.MEMORY_DETAIL, targetId.toString())),
+                                MindTransition.SLIDE_RIGHT,
                             )
-                            original.id
-                        } else {
-                            repo.saveMemory(
-                                title = title,
-                                content = content,
-                                type = optionToType(type),
-                                tags = tags,
-                                projectId = linkedProjectId,
-                                revisitAt = revisitMillis,
-                            )
-                        }
-                        nav.resetTo(
-                            listOf(com.mindrelay.nav.MindRoute(MindScreen.MEMORY_DETAIL, targetId.toString())),
-                            MindTransition.SLIDE_RIGHT,
-                        )
-                    }
+                        },
+                    )
                 },
                 modifier = Modifier.fillMaxWidth(),
             )

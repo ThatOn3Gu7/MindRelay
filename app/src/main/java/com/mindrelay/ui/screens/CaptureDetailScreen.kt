@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mindrelay.data.model.CaptureKind
-import com.mindrelay.data.model.ConvertType
 import com.mindrelay.nav.MindNavController
 import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
@@ -77,7 +76,7 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
     Column(Modifier.fillMaxSize()) {
         MindTopBar(
             title = "Capture",
-            onBack = { nav.navigate(MindScreen.INBOX, MindTransition.SLIDE_RIGHT) },
+            onBack = { nav.popToRoot() },
             actions = listOf(
                 Icons.Rounded.MoreVert to { menuOpen = true },
             ),
@@ -87,8 +86,13 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                 text = { Text("Delete capture") },
                 onClick = {
                     menuOpen = false
-                    vm.launch { repo.deleteCapture(capture) }
-                    nav.navigate(MindScreen.INBOX, MindTransition.SLIDE_RIGHT)
+                    vm.launchAndRun(
+                        block = {
+                            repo.deleteCapture(capture)
+                            null
+                        },
+                        andThen = { nav.resetTo(listOf(com.mindrelay.nav.MindRoute(MindScreen.INBOX)), MindTransition.SLIDE_DOWN) },
+                    )
                 },
             )
         }
@@ -102,7 +106,10 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
             // Selected chip (the capture's kind) + provenance line.
             RecKindChip(kindLabel(capture.kind))
             Text(
-                "Captured ${relativeAgo(capture.createdAt)} · ${if (capture.isVoice) "voice entry" else "text entry"}",
+                if (capture.isVoice)
+                    "Captured ${relativeAgo(capture.createdAt)} · voice entry · no audio stored"
+                else
+                    "Captured ${relativeAgo(capture.createdAt)} · text entry",
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -135,21 +142,20 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                 supporting = "Durable knowledge Future You can find",
                 icon = Icons.Rounded.Bookmark,
                 onClick = {
-                    val pid = capture.projectId
-                    vm.launch {
-                        val memoryId = repo.saveMemory(
-                            title = capture.text.substringBefore('.'),
-                            content = capture.text,
-                            type = com.mindrelay.data.model.MemoryType.NOTE,
-                            tags = "",
-                            projectId = pid,
-                            revisitAt = null,
-                            sourceType = com.mindrelay.data.model.MemorySourceType.CAPTURE,
-                            sourceCaptureId = capture.id,
-                        )
-                        repo.convertCapture(capture, ConvertType.MEMORY, memoryId)
-                        nav.navigate(MindScreen.MEMORIES, MindTransition.SLIDE_RIGHT)
-                    }
+                    vm.launchAndRun(
+                        block = {
+                            if (capture.converted == com.mindrelay.data.model.ConvertType.MEMORY) {
+                                "This capture was already converted to a Memory"
+                            } else {
+                                val result = repo.convertToMemory(capture.id)
+                                when (result) {
+                                    is com.mindrelay.data.repo.ConvertResult.Ok -> null
+                                    is com.mindrelay.data.repo.ConvertResult.Rejected -> result.reason
+                                }
+                            }
+                        },
+                        andThen = { nav.resetTo(listOf(com.mindrelay.nav.MindRoute(MindScreen.MEMORIES)), MindTransition.SLIDE_DOWN) },
+                    )
                 },
             )
             ConvertItem(
@@ -157,10 +163,23 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                 supporting = "Attach to a project or current session",
                 icon = Icons.Rounded.FolderOpen,
                 onClick = {
-                    val pid = capture.projectId ?: projects.firstOrNull()?.id
+                    val pid = capture.projectId ?: projects.firstOrNull { it.status == com.mindrelay.data.model.ProjectStatus.ACTIVE }?.id
+                    ??: projects.firstOrNull()?.id
                     if (pid != null) {
-                        vm.launch { repo.convertCapture(capture, ConvertType.PROJECT_NOTE, pid) }
-                        nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, pid.toString())
+                        vm.launchAndRun(
+                            block = {
+                                if (capture.converted == com.mindrelay.data.model.ConvertType.PROJECT_NOTE) {
+                                    "This capture was already converted to a Project note"
+                                } else {
+                                    val result = repo.convertToProjectNote(capture.id, pid)
+                                    when (result) {
+                                        is com.mindrelay.data.repo.ConvertResult.Ok -> null
+                                        is com.mindrelay.data.repo.ConvertResult.Rejected -> result.reason
+                                    }
+                                }
+                            },
+                            andThen = { nav.resetTo(listOf(com.mindrelay.nav.MindRoute(MindScreen.PROJECT_DETAIL, pid.toString())), MindTransition.SLIDE_DOWN) },
+                        )
                     } else {
                         nav.navigate(MindScreen.NEW_PROJECT, MindTransition.SLIDE_UP)
                     }
@@ -171,19 +190,33 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                 supporting = "Create a secondary to-do item",
                 icon = Icons.Rounded.CheckBox,
                 onClick = {
-                    vm.launch {
-                        val tid = repo.addTask(capture.text, projectId = capture.projectId, captureId = capture.id)
-                        repo.convertCapture(capture, ConvertType.TASK, tid)
-                    }
-                    nav.navigate(MindScreen.HOME, MindTransition.FADE)
+                    vm.launchAndRun(
+                        block = {
+                            if (capture.converted == com.mindrelay.data.model.ConvertType.TASK) {
+                                "This capture was already converted to a Task"
+                            } else {
+                                val result = repo.convertToTask(capture.id)
+                                when (result) {
+                                    is com.mindrelay.data.repo.ConvertResult.Ok -> null
+                                    is com.mindrelay.data.repo.ConvertResult.Rejected -> result.reason
+                                }
+                            }
+                        },
+                        andThen = { nav.resetTo(listOf(com.mindrelay.nav.MindRoute(MindScreen.HOME)), MindTransition.SLIDE_DOWN) },
+                    )
                 },
             )
 
             // Archive is an outlined full-width button per the sketch.
             androidx.compose.material3.OutlinedButton(
                 onClick = {
-                    vm.launch { repo.archiveCapture(capture) }
-                    nav.navigate(MindScreen.INBOX, MindTransition.SLIDE_RIGHT)
+                    vm.launchAndRun(
+                        block = {
+                            repo.archiveCapture(capture)
+                            null
+                        },
+                        andThen = { nav.resetTo(listOf(com.mindrelay.nav.MindRoute(MindScreen.INBOX)), MindTransition.SLIDE_DOWN) },
+                    )
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),

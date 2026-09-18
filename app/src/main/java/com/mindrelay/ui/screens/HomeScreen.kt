@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mindrelay.data.model.ProjectStatus
+import com.mindrelay.data.model.SessionStatus
 import com.mindrelay.nav.MindNavController
 import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
@@ -50,12 +51,16 @@ fun HomeScreen(vm: AppViewModel, nav: MindNavController) {
     val projects by repo.projects.all().collectAsStateWithLifecycle(initialValue = emptyList())
     val tasks by repo.tasks.open().collectAsStateWithLifecycle(initialValue = emptyList())
     val sessions by repo.sessions.all().collectAsStateWithLifecycle(initialValue = emptyList())
-    val memories by repo.memories.active().collectAsStateWithLifecycle(initialValue = emptyList())
+    // Due-revisit memories come straight from the DAO: only rows with a
+    // revisitAt that is set and not in the future are "due", so future revisits
+    // stay hidden until their date.
+    val memories by repo.memories.dueNow(System.currentTimeMillis(), limit = 25)
+        .collectAsStateWithLifecycle(initialValue = emptyList())
 
     val inboxCount = captures.size
     val continueProject = projects.firstOrNull { it.status == ProjectStatus.ACTIVE }
     val continueSession = continueProject?.let { p ->
-        sessions.filter { it.projectId == p.id && it.status == "Active" }
+        sessions.filter { it.projectId == p.id && it.status == SessionStatus.ACTIVE }
             .maxByOrNull { it.startedAt }
             ?: sessions.filter { it.projectId == p.id }.maxByOrNull { it.startedAt }
     }
@@ -86,8 +91,6 @@ fun HomeScreen(vm: AppViewModel, nav: MindNavController) {
             }
         }
     val nextActionsLimited = nextActions.take(6)
-
-    val revisitToday = memories.filter { it.revisitAt != null }
 
     TabScaffold(
         nav = nav,
@@ -183,7 +186,7 @@ fun HomeScreen(vm: AppViewModel, nav: MindNavController) {
 
             item { Spacer(Modifier.height(2.dp)) }
             item { SectionLabel("Revisit soon") }
-            if (revisitToday.isEmpty()) {
+            if (memories.isEmpty()) {
                 item {
                     androidx.compose.material3.Text(
                         "No memories due. Give durable knowledge a revisit date and it will resurface here.",
@@ -192,10 +195,10 @@ fun HomeScreen(vm: AppViewModel, nav: MindNavController) {
                     )
                 }
             } else {
-                items(revisitToday.take(5), key = { it.id }) { m ->
+                items(memories.take(5), key = { it.id }) { m ->
                     BodyListItem(
                         headline = m.title,
-                        supporting = "Fix · ${if (m.revisitAt != null) "Revisit today" else ""}",
+                        supporting = "Fix · Revisit today",
                         icon = Icons.Rounded.EventRepeat,
                         onClick = { nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, m.id.toString()) },
                     )

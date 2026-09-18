@@ -67,6 +67,14 @@ class MindNavController {
         }
     }
 
+    /** Pop to the bottom-most destination (a tab), used by overlaid "back" arrows. */
+    fun popToRoot() {
+        if (stack.size > 1) {
+            change = NavChange(MindTransition.SLIDE_RIGHT, backward = true)
+            stack = listOf(stack.first())
+        }
+    }
+
     fun popTo(screen: MindScreen) {
         if (stack.size > 1) {
             val idx = stack.indexOfLast { it.screen == screen }

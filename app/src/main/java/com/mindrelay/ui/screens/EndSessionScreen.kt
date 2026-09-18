@@ -63,7 +63,7 @@ fun EndSessionScreen(vm: AppViewModel, nav: MindNavController, sessionId: Long?)
     Column(Modifier.fillMaxSize()) {
         MindTopBar(
             title = "End session",
-            onClose = { nav.navigate(MindScreen.SESSION, MindTransition.SLIDE_DOWN, session.id.toString()) },
+            onClose = { nav.pop() },
         )
         Column(
             Modifier
@@ -140,23 +140,24 @@ fun EndSessionScreen(vm: AppViewModel, nav: MindNavController, sessionId: Long?)
                 icon = Icons.Rounded.Check,
                 enabled = completed.isNotBlank() || discoveries.isNotBlank() || nextAction.isNotBlank(),
                 onClick = {
-                    vm.launch {
-                        val updated = session.copy(
-                            completed = completed.trim(),
-                            discoveries = discoveries.trim(),
-                            unresolved = unresolved.trim(),
-                            currentNextAction = nextAction.trim(),
-                        )
-                        repo.updateSession(updated)
-                        if (promoteChecked) {
-                            repo.promoteDiscoveryToMemory(updated)
-                        }
-                        repo.endSession(updated)
-                        nav.resetTo(
-                            listOf(com.mindrelay.nav.MindRoute(MindScreen.PROJECT_DETAIL, session.projectId.toString())),
-                            MindTransition.SLIDE_DOWN,
-                        )
-                    }
+                    vm.launchAndRun(
+                        block = {
+                            repo.completeSession(
+                                completedText = completed,
+                                discoveries = discoveries,
+                                unresolved = unresolved,
+                                nextAction = nextAction,
+                                sessionId = session.id,
+                                promoteDiscovery = promoteChecked,
+                            )?.let { it.message ?: "Could not end the session" }
+                        },
+                        andThen = {
+                            nav.resetTo(
+                                listOf(com.mindrelay.nav.MindRoute(MindScreen.PROJECT_DETAIL, session.projectId.toString())),
+                                MindTransition.SLIDE_DOWN,
+                            )
+                        },
+                    )
                 },
                 modifier = Modifier.fillMaxWidth(),
             )

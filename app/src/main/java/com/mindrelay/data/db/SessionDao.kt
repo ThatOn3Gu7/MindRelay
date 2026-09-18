@@ -5,12 +5,16 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.mindrelay.data.model.SessionStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SessionDao {
     @Query("SELECT * FROM sessions WHERE projectId = :projectId ORDER BY startedAt DESC")
     fun byProject(projectId: Long): Flow<List<SessionEntity>>
+
+    @Query("SELECT * FROM sessions WHERE projectId = :projectId ORDER BY startedAt DESC")
+    suspend fun byProjectOneShot(projectId: Long): List<SessionEntity>
 
     @Query("SELECT * FROM sessions ORDER BY startedAt DESC")
     fun all(): Flow<List<SessionEntity>>
@@ -21,11 +25,13 @@ interface SessionDao {
     @Query("SELECT * FROM sessions WHERE id = :id")
     suspend fun one(id: Long): SessionEntity?
 
-    @Query("SELECT * FROM sessions WHERE projectId = :projectId AND status = 'Active' ORDER BY startedAt DESC LIMIT 1")
-    suspend fun activeForProject(projectId: Long): SessionEntity?
+    /** Open (active) sessions, for transactional mediation of the uniqueness invariant. */
+    @Query("SELECT * FROM sessions WHERE status = 'ACTIVE'")
+    suspend fun openSessions(): List<SessionEntity>
 
-    @Query("SELECT COUNT(*) FROM sessions WHERE projectId = :projectId")
-    fun sessionCount(projectId: Long): Flow<Int>
+    /** Highest display number used so far on a project (0 when none exist). */
+    @Query("SELECT COALESCE(MAX(displayNumber), 0) FROM sessions WHERE projectId = :projectId")
+    suspend fun maxDisplayNumber(projectId: Long): Int
 
     @Insert
     suspend fun insert(item: SessionEntity): Long

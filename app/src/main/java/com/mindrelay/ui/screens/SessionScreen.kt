@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mindrelay.data.model.EntryKind
+import com.mindrelay.data.model.SessionStatus
 import com.mindrelay.nav.MindNavController
 import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
@@ -96,7 +97,7 @@ fun SessionScreen(vm: AppViewModel, nav: MindNavController, sessionId: Long?) {
 
     LaunchedEffect(session) {
         val s = session
-        if (s != null && s.status == "Active") {
+        if (s != null && s.status == SessionStatus.ACTIVE) {
             while (true) {
                 clock = stopwatch(s.startedAt)
                 delay(1000)
@@ -121,10 +122,7 @@ fun SessionScreen(vm: AppViewModel, nav: MindNavController, sessionId: Long?) {
         Column(Modifier.fillMaxSize()) {
             MindTopBar(
                 title = session.title.substringBefore("·").trim(),
-                onBack = {
-                    if (project != null) nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, project.id.toString())
-                    else nav.pop()
-                },
+                onBack = { nav.pop() },
                 actions = listOf(Icons.Rounded.MoreVert to { menuOpen = true }),
             )
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
@@ -132,8 +130,13 @@ fun SessionScreen(vm: AppViewModel, nav: MindNavController, sessionId: Long?) {
                     text = { Text("Delete session", color = MaterialTheme.colorScheme.error) },
                     onClick = {
                         menuOpen = false
-                        vm.launch { repo.sessions.deleteById(session.id) }
-                        nav.pop()
+                        vm.launchAndRun(
+                            block = {
+                                repo.deleteSession(session.id)
+                                null
+                            },
+                            andThen = { nav.pop() },
+                        )
                     },
                 )
             }
@@ -143,7 +146,10 @@ fun SessionScreen(vm: AppViewModel, nav: MindNavController, sessionId: Long?) {
                     Text(project.name, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    TimedChip(if (session.status == "Active") "Active · $clock" else "Completed · ${durationText(session.startedAt, session.endedAt)}")
+                    TimedChip(
+                        if (session.status == SessionStatus.ACTIVE) "Active · $clock"
+                        else "Completed · ${durationText(session.startedAt, session.endedAt)}"
+                    )
                 }
                 Spacer(Modifier.height(8.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
@@ -198,7 +204,7 @@ fun SessionScreen(vm: AppViewModel, nav: MindNavController, sessionId: Long?) {
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
-                    enabled = session.status == "Active",
+                    enabled = session.status == SessionStatus.ACTIVE,
                 ) {
                     Icon(Icons.Rounded.Flag, contentDescription = null)
                     Text("End session & write handoff", Modifier.padding(start = 8.dp))

@@ -19,9 +19,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.rememberSnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.screens.CaptureDetailScreen
 import com.mindrelay.ui.screens.DataBackupScreen
@@ -48,6 +53,13 @@ import com.mindrelay.ui.screens.SettingsScreen
 @Composable
 fun MindNavHost(vm: AppViewModel, nav: MindNavController) {
     val change = nav.change
+
+    // Surface repository/backup failures from any screen as a snackbar.
+    val errorState by vm.errors.collectAsStateWithLifecycle(initialValue = null)
+    val snackbarHostState = rememberSnackbarHostState()
+    LaunchedEffect(errorState) {
+        errorState?.let { snackbarHostState.showSnackbar(it) }
+    }
 
     // System back gesture / button pops the stack (transition plays in reverse).
     BackHandler(enabled = nav.canPop) { nav.pop() }
@@ -87,6 +99,10 @@ fun MindNavHost(vm: AppViewModel, nav: MindNavController) {
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             Screen(vm = vm, nav = nav, route = route)
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }
@@ -101,7 +117,7 @@ private fun Screen(vm: AppViewModel, nav: MindNavController, route: MindRoute) {
         MindScreen.PROJECTS -> ProjectsScreen(vm, nav)
         MindScreen.MEMORIES -> MemoriesScreen(vm, nav)
         MindScreen.SEARCH -> SearchScreen(vm, nav)
-        MindScreen.QUICK_CAPTURE -> QuickCaptureScreen(vm, nav)
+        MindScreen.QUICK_CAPTURE -> QuickCaptureScreen(vm, nav, route.arg.asLongOrNull())
         MindScreen.CAPTURE_DETAIL -> CaptureDetailScreen(vm, nav, route.arg.asLongOrNull())
         MindScreen.PROJECT_DETAIL -> ProjectDetailScreen(vm, nav, route.arg.asLongOrNull())
         MindScreen.SESSION -> SessionScreen(vm, nav, route.arg.asLongOrNull())

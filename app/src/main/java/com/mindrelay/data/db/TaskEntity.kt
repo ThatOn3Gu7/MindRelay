@@ -1,10 +1,30 @@
 package com.mindrelay.data.db
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /** A (possibly recurring) next-action task, auto-created for reviews. */
-@Entity(tableName = "tasks")
+@Entity(
+    tableName = "tasks",
+    foreignKeys = [ForeignKey(
+        entity = ProjectEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["projectId"],
+        onDelete = ForeignKey.SET_NULL,
+    ), ForeignKey(
+        entity = CaptureEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["captureId"],
+        onDelete = ForeignKey.CASCADE,
+    )],
+    indices = [
+        Index("projectId"),
+        Index("captureId"),
+        Index("done"),
+    ],
+)
 data class TaskEntity(
     @PrimaryKey val id: Long = 0,
     val text: String,

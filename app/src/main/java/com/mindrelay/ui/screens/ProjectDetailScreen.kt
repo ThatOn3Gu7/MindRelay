@@ -56,7 +56,7 @@ fun ProjectDetailScreen(vm: AppViewModel, nav: MindNavController, projectId: Lon
     val projectFlow = repo.projects.byId(projectId).collectAsStateWithLifecycle(initialValue = null)
     val project = projectFlow.value
     val sessions by repo.sessions.byProject(projectId).collectAsStateWithLifecycle(initialValue = emptyList())
-    val memories by repo.memories.active().collectAsStateWithLifecycle(initialValue = emptyList())
+    val linked by repo.memories.byProject(projectId).collectAsStateWithLifecycle(initialValue = emptyList())
     var menuOpen by remember { mutableStateOf(false) }
     var statusMenu by remember { mutableStateOf(false) }
 
@@ -68,7 +68,7 @@ fun ProjectDetailScreen(vm: AppViewModel, nav: MindNavController, projectId: Lon
     Column(Modifier.fillMaxSize()) {
         MindTopBar(
             title = project.name,
-            onBack = { nav.navigate(MindScreen.PROJECTS, MindTransition.SLIDE_RIGHT) },
+            onBack = { nav.popToRoot() },
             actions = listOf(Icons.Rounded.MoreVert to { menuOpen = true }),
         )
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
@@ -84,8 +84,13 @@ fun ProjectDetailScreen(vm: AppViewModel, nav: MindNavController, projectId: Lon
                 text = { Text("Delete project", color = MaterialTheme.colorScheme.error) },
                 onClick = {
                     menuOpen = false
-                    vm.launch { repo.deleteProject(project.id) }
-                    nav.navigate(MindScreen.PROJECTS, MindTransition.SLIDE_RIGHT)
+                    vm.launchAndRun(
+                        block = {
+                            repo.deleteProject(project.id)
+                            null
+                        },
+                        andThen = { nav.resetTo(listOf(com.mindrelay.nav.MindRoute(MindScreen.PROJECTS)), MindTransition.SLIDE_DOWN) },
+                    )
                 },
             )
         }
@@ -135,19 +140,47 @@ fun ProjectDetailScreen(vm: AppViewModel, nav: MindNavController, projectId: Lon
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                 PillButton(
-                    text = "Resume session",
+                    // A DONE project must be explicitly reactivated before a new
+                    // session can start; it never silently acts like an ACTIVE one.
+                    text = if (project.status == ProjectStatus.DONE) "Reactivate" else "Resume session",
                     icon = Icons.Rounded.PlayArrow,
                     onClick = {
-                        vm.launch {
-                            val sid = repo.resumeOrNewSession(project.id)
-                            nav.navigate(MindScreen.SESSION, MindTransition.SLIDE_RIGHT, sid.toString())
-                        }
+                        var resultingSessionId: Long? = null
+                        var reactivated = false
+                        vm.launchAndRun(
+                            block = {
+                                if (project.status == ProjectStatus.DONE) {
+                                    repo.setProjectStatus(project.id, ProjectStatus.ACTIVE)
+                                    reactivated = true
+                                    null
+                                } else {
+                                    val sid = repo.resumeOrNewSession(project.id)
+                                    if (sid == null) {
+                                        "Project no longer exists"
+                                    } else {
+                                        resultingSessionId = sid
+                                        null
+                                    }
+                                }
+                            },
+                            andThen = {
+                                if (reactivated) {
+                                    // Stay on the project; the label flips back to
+                                    // "Resume session" via the reactive status flow.
+                                    Unit
+                                } else if (resultingSessionId != null) {
+                                    nav.navigate(MindScreen.SESSION, MindTransition.SLIDE_RIGHT, resultingSessionId.toString())
+                                }
+                            },
+                        )
                     },
                     modifier = Modifier.weight(1f),
                 )
                 TonalPillButton(
                     text = "Add note",
-                    onClick = { nav.navigate(MindScreen.QUICK_CAPTURE, MindTransition.EXPAND) },
+                    // Always opens capture pre-linked to THIS project, so the
+                    // saved note is genuinely associated with the selected project.
+                    onClick = { nav.navigate(MindScreen.QUICK_CAPTURE, MindTransition.EXPAND, project.id.toString()) },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -171,7 +204,6 @@ fun ProjectDetailScreen(vm: AppViewModel, nav: MindNavController, projectId: Lon
             }
 
             SectionLabel("Linked memories", size = 14)
-            val linked = memories.filter { it.projectId == project.id }
             if (linked.isEmpty()) {
                 Text(
                     "None linked yet.",
