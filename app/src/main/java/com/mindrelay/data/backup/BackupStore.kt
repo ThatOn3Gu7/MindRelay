@@ -34,12 +34,12 @@ class BackupStore(private val db: AppDatabase) {
             put("exportedAt", System.currentTimeMillis())
         }
         db.withTransaction {
-            root.put("projects", db.projectDao().listAll().toJson())
-            root.put("sessions", db.sessionDao().listAll().toJson())
-            root.put("entries", db.entryDao().listAll().toJson())
-            root.put("captures", db.captureDao().listAll().toJson())
-            root.put("memories", db.memoryDao().listAll().toJson())
-            root.put("tasks", db.taskDao().listAll().toJson())
+            root.put("projects", db.projectDao().listAll().projectsToJson())
+            root.put("sessions", db.sessionDao().listAll().sessionsToJson())
+            root.put("entries", db.entryDao().listAll().entriesToJson())
+            root.put("captures", db.captureDao().listAll().capturesToJson())
+            root.put("memories", db.memoryDao().listAll().memoriesToJson())
+            root.put("tasks", db.taskDao().listAll().tasksToJson())
         }
         context.contentResolver.openOutputStream(uri)?.use { out ->
             out.write(root.toString(2).toByteArray())
@@ -159,7 +159,7 @@ data class Snapshot(
 // org.json ↔ entity adapters (full fidelity incl. ids ⇒ relationships survive).
 // ---------------------------------------------------------------------------
 
-private fun List<ProjectEntity>.toJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
+private fun List<ProjectEntity>.projectsToJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
 private fun ProjectEntity.toJson(): JSONObject = JSONObject().apply {
     put("id", id); put("name", name); put("status", status.name)
     put("currentState", currentState); put("nextAction", nextAction); put("goal", goal)
@@ -184,7 +184,7 @@ private fun JSONArray?.toProjects(): List<ProjectEntity> = buildList {
     }
 }
 
-private fun List<SessionEntity>.toJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
+private fun List<SessionEntity>.sessionsToJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
 private fun SessionEntity.toJson(): JSONObject = JSONObject().apply {
     put("id", id); put("projectId", projectId); put("title", title); put("status", status)
     put("startedAt", startedAt); put("endedAt", endedAt ?: JSONObject.NULL)
@@ -212,7 +212,7 @@ private fun JSONArray?.toSessions(): List<SessionEntity> = buildList {
     }
 }
 
-private fun List<SessionEntryEntity>.toJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
+private fun List<SessionEntryEntity>.entriesToJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
 private fun SessionEntryEntity.toJson(): JSONObject = JSONObject().apply {
     put("id", id); put("sessionId", sessionId); put("text", text); put("kind", kind.name); put("createdAt", createdAt)
 }
@@ -232,7 +232,7 @@ private fun JSONArray?.toEntries(): List<SessionEntryEntity> = buildList {
     }
 }
 
-private fun List<CaptureEntity>.toJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
+private fun List<CaptureEntity>.capturesToJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
 private fun CaptureEntity.toJson(): JSONObject = JSONObject().apply {
     put("id", id); put("text", text); put("detail", detail); put("kind", kind.name); put("isVoice", isVoice)
     put("projectId", projectId ?: JSONObject.NULL); put("linkedSessionId", linkedSessionId ?: JSONObject.NULL)
@@ -261,7 +261,7 @@ private fun JSONArray?.toCaptures(): List<CaptureEntity> = buildList {
     }
 }
 
-private fun List<MemoryEntity>.toJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
+private fun List<MemoryEntity>.memoriesToJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
 private fun MemoryEntity.toJson(): JSONObject = JSONObject().apply {
     put("id", id); put("title", title); put("content", content); put("type", type.name); put("tags", tags)
     put("projectId", projectId ?: JSONObject.NULL); put("sourceSessionId", sourceSessionId ?: JSONObject.NULL)
@@ -291,7 +291,7 @@ private fun JSONArray?.toMemories(): List<MemoryEntity> = buildList {
     }
 }
 
-private fun List<TaskEntity>.toJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
+private fun List<TaskEntity>.tasksToJson(): JSONArray = JSONArray().also { arr -> forEach { arr.put(it.toJson()) } }
 private fun TaskEntity.toJson(): JSONObject = JSONObject().apply {
     put("id", id); put("text", text); put("tag", tag); put("projectId", projectId ?: JSONObject.NULL)
     put("captureId", captureId ?: JSONObject.NULL); put("dueAt", dueAt ?: JSONObject.NULL)
