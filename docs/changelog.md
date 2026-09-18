@@ -25,6 +25,8 @@ change, newest first within a category.
 
 - Fixed a compile break in the Data & Backup screen from an import that pointed
   `ConfirmDialog` at the wrong package.
+- Fixed a lint error in Search where an `AnimatedContent` content lambda ignored
+  its target filter state.
 
 ### Improved
 
