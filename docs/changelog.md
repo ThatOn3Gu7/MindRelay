@@ -8,6 +8,11 @@ change, newest first within a category.
 
 ### Added
 
+- Redesigned the Session screen (the last screen still on the old look) to
+  match the app's expressive idiom: entrance animation, a live status chip,
+  expressive entry cards with per-kind icon colors, a hero "current next
+  action" card, and a pinned end-session action bar.
+
 - Committed a stable debug signing key (`keystore/mindrelay-debug.p12`) so every
   debug APK — local or CI — shares one signature, and CI builds install straight
   over older builds instead of requiring an uninstall/reinstall.
