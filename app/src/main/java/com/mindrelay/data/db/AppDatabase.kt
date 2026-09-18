@@ -49,7 +49,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun projectDao(): ProjectDao
     abstract fun sessionDao(): SessionDao
     abstract fun sessionEntryDao(): SessionEntryDao
-    abstract fun entryDao(): SessionEntryDao
     abstract fun memoryDao(): MemoryDao
     abstract fun taskDao(): TaskDao
+
+    /** Alias used by the backup layer; Room allows only one abstract accessor per DAO. */
+    fun entryDao(): SessionEntryDao = sessionEntryDao()
 }

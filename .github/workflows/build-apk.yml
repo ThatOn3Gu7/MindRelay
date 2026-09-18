@@ -29,6 +29,7 @@ jobs:
 
       - name: Build debug APK
         run: |
+          set -o pipefail
           ./gradlew :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee build-log.txt
           echo "--- APK outputs ---"
           find app/build -name '*.apk' -print 2>/dev/null | tee apk-paths.txt
