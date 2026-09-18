@@ -1,6 +1,7 @@
 package com.mindrelay.ui
 
 import android.app.Application
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewModelScope
