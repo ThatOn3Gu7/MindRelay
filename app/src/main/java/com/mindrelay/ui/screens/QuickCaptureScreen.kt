@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +37,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,6 +68,7 @@ import com.mindrelay.ui.components.SectionLabel
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun QuickCaptureScreen(vm: AppViewModel, nav: MindNavController, initialProjectId: Long? = null) {
+    // Data & State (Untouched)
     val repo = vm.repository
     val projects by repo.projects.all().collectAsStateWithLifecycle(initialValue = emptyList())
     val settings by vm.settings.collectAsStateWithLifecycle()
@@ -81,11 +86,11 @@ fun QuickCaptureScreen(vm: AppViewModel, nav: MindNavController, initialProjectI
         else -> CaptureKind.IDEA
     }
 
-    // A note opened from a Project Detail screen is pre-linked to that project.
     val projectLinkedLabel = linkedProjectId?.let { id ->
         projects.firstOrNull { it.id == id }?.name
     }
 
+    // Main Layout (Redesigned visual hierarchy)
     Column(
         Modifier
             .fillMaxSize()
@@ -93,20 +98,26 @@ fun QuickCaptureScreen(vm: AppViewModel, nav: MindNavController, initialProjectI
             .imePadding()
     ) {
         MindTopBar(title = "Quick Capture", onClose = { nav.pop() })
+        
+        // Scrollable Workspace Area
         Column(
             Modifier
-                .fillMaxSize()
+                .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
-            SectionLabel("What's on your mind?", size = 24)
+            // Header
+            SectionLabel("What's on your mind?", size = 28)
+            Spacer(Modifier.height(4.dp))
             Text(
                 "Get it out now. Sort it later.",
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(16.dp))
+            
+            Spacer(Modifier.height(24.dp))
 
+            // Primary Input Canvas
             MindTextField(
                 value = text,
                 onValueChange = { text = it },
@@ -115,36 +126,75 @@ fun QuickCaptureScreen(vm: AppViewModel, nav: MindNavController, initialProjectI
                 supportingText = "Text notes only — no audio is recorded or stored. Saved locally.",
                 filled = true,
                 singleLine = false,
-                minLines = 5,
-                maxLines = 8,
+                minLines = 6,
+                maxLines = 10,
             )
-            Spacer(Modifier.height(16.dp))
+            
+            Spacer(Modifier.height(32.dp))
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                ConnectedChipGroup(
-                    options = listOf("Idea", "To-do", "Question", "Note"),
-                    selected = kind,
-                    onSelect = { kind = it },
-                )
+            // Metadata Group Card (Groups Type and Project together cleanly)
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                    .padding(20.dp)
+            ) {
+                Column {
+                    Text(
+                        "Categorize as", 
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    
+                    ConnectedChipGroup(
+                        options = listOf("Idea", "To-do", "Question", "Note"),
+                        selected = kind,
+                        onSelect = { kind = it },
+                    )
+
+                    Spacer(Modifier.height(20.dp))
+                    
+                    // Subtle Divider
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f))
+                    )
+                    
+                    Spacer(Modifier.height(20.dp))
+
+                    ProjectLinkPicker(projects, linkedProjectId) { picked ->
+                        linkedProjectId = if (linkedProjectId == picked) null else picked
+                    }
+                }
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
+        }
 
-            ProjectLinkPicker(projects, linkedProjectId) { picked ->
-                linkedProjectId = if (linkedProjectId == picked) null else picked
-            }
-            Spacer(Modifier.height(16.dp))
-
+        // Fixed Bottom Action Bar
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
             Text(
-                "🔒 Stays on your device. No cloud, no account. " +
-                    if (projectLinkedLabel != null) "This note will be linked to $projectLinkedLabel." else "",
+                "🔒 Stays on your device. No cloud, no account." +
+                    if (projectLinkedLabel != null) "\nLinking to: $projectLinkedLabel" else "",
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(20.dp))
+            
+            Spacer(Modifier.height(16.dp))
 
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 TextButton(
                     onClick = {
@@ -157,13 +207,13 @@ fun QuickCaptureScreen(vm: AppViewModel, nav: MindNavController, initialProjectI
                         }
                     },
                     enabled = text.isNotBlank(),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(56.dp),
                     shape = RoundedCornerShape(28.dp, 8.dp, 8.dp, 28.dp),
                 ) {
                     Text("Save & keep writing", style = MaterialTheme.typography.labelLarge)
                 }
+                
                 Button(
-                    // Navigate only after the write has actually completed.
                     onClick = {
                         vm.launchAndRun(
                             block = {
@@ -179,13 +229,12 @@ fun QuickCaptureScreen(vm: AppViewModel, nav: MindNavController, initialProjectI
                         )
                     },
                     enabled = text.isNotBlank(),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(56.dp),
                     shape = RoundedCornerShape(8.dp, 28.dp, 28.dp, 8.dp),
                 ) {
                     Text("Save to Inbox", style = MaterialTheme.typography.labelLarge)
                 }
             }
-            Spacer(Modifier.height(24.dp))
         }
     }
 }
@@ -197,35 +246,56 @@ private fun ProjectLinkPicker(
     linkedProjectId: Long?,
     onPick: (Long) -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
-                .padding(10.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Rounded.FolderOpen, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+    Column(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier
+                    .size(44.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Rounded.FolderOpen, 
+                    contentDescription = null, 
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            
+            Spacer(Modifier.width(16.dp))
+            
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "Link to project (optional)", 
+                    style = MaterialTheme.typography.labelMedium, 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                val selectedProject = projects.firstOrNull { it.id == linkedProjectId }
+                Text(
+                    selectedProject?.name ?: "None selected",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (selectedProject != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            
+            IconButton(
+                onClick = { projects.firstOrNull()?.let { onPick(it.id) } },
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface, CircleShape)
+            ) {
+                Icon(Icons.Rounded.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            }
         }
-        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            Text("Link to project (optional)", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-            Text(
-                projects.firstOrNull { it.id == linkedProjectId }?.name ?: "None",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        IconButton(onClick = { projects.firstOrNull()?.let { onPick(it.id) } }) {
-            Icon(Icons.Rounded.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        }
-    }
-    if (projects.isNotEmpty()) {
-        Spacer(Modifier.height(4.dp))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            projects.forEach { p ->
-                PillChip(label = p.name, selected = linkedProjectId == p.id, onClick = { onPick(p.id) })
+        
+        if (projects.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                projects.forEach { p ->
+                    PillChip(label = p.name, selected = linkedProjectId == p.id, onClick = { onPick(p.id) })
+                }
             }
         }
     }
