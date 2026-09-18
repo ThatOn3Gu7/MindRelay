@@ -1,14 +1,18 @@
 name: Build MindRelay APK
 
 # Canonical Android workflow for MindRelay: runs unit tests, runs lint, builds
-# the debug APK, and uploads the `mindrelay-debug-apk` artifact. It applies on
-# every push and every pull request, so branches and PRs share one truthful
-# pipeline.
+# the debug APK, and uploads the `mindrelay-debug-apk` artifact. Every pushed
+# commit runs exactly one workflow — see the triggers below.
 on:
   push:
     branches:
       - '**'
+  # PR checks run only when a PR is opened or reopened. New commits pushed to
+  # an already-open PR are handled by the `push` trigger above, so deliberately
+  # omitting `synchronize` here. Including it would launch a SECOND run for
+  # every push (the old "two workflows per commit" bug).
   pull_request:
+    types: [ opened, reopened ]
   workflow_dispatch:
 
 jobs:

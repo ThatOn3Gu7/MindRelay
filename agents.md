@@ -24,7 +24,9 @@ into generic project management.
 - `docs/` — changelog (`changelog.md`) and samples. GitHub release notes are
   generated from `docs/changelog.md`.
 - `.github/workflows/build-apk.yml` — the one canonical CI workflow: unit tests,
-  lint, debug APK build, `mindrelay-debug-apk` artifact, diagnostics.
+  lint, debug APK build, `mindrelay-debug-apk` artifact, diagnostics. Triggering
+  is `push` + `pull_request` (`opened`/`reopened` only) so each commit runs
+  exactly one workflow.
 - `keystore/mindrelay-debug.p12` — committed stable **debug** signing key
   (password/alias are the standard `android` / `androiddebugkey`; debug-only,
   never reuse it for anything real).

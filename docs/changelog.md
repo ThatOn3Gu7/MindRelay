@@ -21,6 +21,14 @@ change, newest first within a category.
 - Added `docs/` changelog directory and a root `agents.md` with the project
   rules every agent/session must follow.
 
+### Fixed
+
+- Fixed a compile break in the Data & Backup screen from an import that pointed
+  `ConfirmDialog` at the wrong package.
+- CI no longer runs the workflow twice per pushed commit: the `pull_request`
+  trigger is now limited to `opened`/`reopened` instead of also firing on
+  `synchronize`.
+
 ### Improved
 
 - A read-write test in `BackupStoreTest` now parses and validates the shipped
