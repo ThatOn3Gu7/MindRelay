@@ -77,12 +77,38 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
+          # GitHub always wraps workflow artifacts in a .zip download. This
+          # artifact is for CI verification logs, not a one-tap install path.
           name: mindrelay-debug-apk
           path: |
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/**/*.apk
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Publish debug APK as a release asset (main pushes)
+        # GitHub release assets are served as-is, so the APK downloads as a
+        # directly installable file instead of an artifact zip. main only, so
+        # a download link always points at the latest merged build. gh is
+        # preinstalled on the ubuntu-24.04 runner.
+        if: github.ref == 'refs/heads/main' && success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK="$(find app/build/outputs/apk -name '*.apk' | head -n 1)"
+          test -n "${APK:-}" || { echo "No APK found"; exit 1; }
+          echo "Publishing ${APK}"
+          NOTES="docs/changelog.md"
+          test -f "$NOTES" || { echo "# MindRelay" > "$NOTES"; }
+          SHA_SHORT="$(printf '%.7s' "${GITHUB_SHA}")"
+          # Rolling tag: replace the previous latest release + its tag.
+          gh release delete mindrelay-latest --yes --cleanup-tag >/dev/null 2>&1 || true
+          gh release create mindrelay-latest "${APK}#mindrelay-debug-${SHA_SHORT}.apk" \
+            --title "MindRelay debug (latest)" \
+            --notes-file "$NOTES" \
+            --target "${GITHUB_SHA}"
+          echo "Published: https://github.com/${GITHUB_REPOSITORY}/releases/tag/mindrelay-latest"
 
       - name: Upload failure diagnostics
         if: failure()

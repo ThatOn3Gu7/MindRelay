@@ -1,0 +1,398 @@
+{
+  "app": "MindRelay",
+  "version": 1,
+  "exportedAt": 1789646400000,
+  "projects": [
+    {
+      "id": 1001,
+      "name": "Compose Practise App",
+      "status": "ACTIVE",
+      "currentState": "UI shell building, nav working",
+      "nextAction": "Wire up the backup screen to the store",
+      "goal": "Ship a tiny offline memory app",
+      "lastWorkedAt": 1789560000000,
+      "createdAt": 1787054400000
+    },
+    {
+      "id": 1002,
+      "name": "Home Garden Setup",
+      "status": "PAUSED",
+      "currentState": "Beds prepared for winter",
+      "nextAction": "Check the drip irrigation timer",
+      "goal": "Fresh vegetables all year",
+      "lastWorkedAt": 1788782400000,
+      "createdAt": 1784462400000
+    },
+    {
+      "id": 1003,
+      "name": "Bicycle Tune-up",
+      "status": "DONE",
+      "currentState": "Brakes bled, chain waxed",
+      "nextAction": "",
+      "goal": "Reliable daily commuter",
+      "lastWorkedAt": 1788436800000,
+      "createdAt": 1781870400000
+    }
+  ],
+  "sessions": [
+    {
+      "id": 2001,
+      "projectId": 1001,
+      "title": "Compose shell design",
+      "status": "ACTIVE",
+      "startedAt": 1789560000000,
+      "endedAt": null,
+      "displayNumber": 2,
+      "completed": "",
+      "discoveries": "Expressive cards look right on the home screen",
+      "unresolved": "Backup restore UX still clunky",
+      "currentNextAction": "Finish the backup screen wiring"
+    },
+    {
+      "id": 2002,
+      "projectId": 1001,
+      "title": "Kickoff exploration",
+      "status": "COMPLETED",
+      "startedAt": 1787918400000,
+      "endedAt": 1788004800000,
+      "displayNumber": 1,
+      "completed": "Settled on Room + DataStore",
+      "discoveries": "",
+      "unresolved": "",
+      "currentNextAction": ""
+    },
+    {
+      "id": 2003,
+      "projectId": 1002,
+      "title": "Irrigation planning",
+      "status": "COMPLETED",
+      "startedAt": 1785758400000,
+      "endedAt": 1785844800000,
+      "displayNumber": 1,
+      "completed": "Mapped the bed layout",
+      "discoveries": "Timer brand only needs one battery",
+      "unresolved": "",
+      "currentNextAction": ""
+    },
+    {
+      "id": 2004,
+      "projectId": 1002,
+      "title": "Winterizing",
+      "status": "ACTIVE",
+      "startedAt": 1788782400000,
+      "endedAt": null,
+      "displayNumber": 2,
+      "completed": "",
+      "discoveries": "",
+      "unresolved": "Frost cloth still missing",
+      "currentNextAction": "Order frost cloth"
+    },
+    {
+      "id": 2005,
+      "projectId": 1003,
+      "title": "Brake bleed",
+      "status": "COMPLETED",
+      "startedAt": 1788436800000,
+      "endedAt": 1788436800000,
+      "displayNumber": 2,
+      "completed": "Both brakes firm",
+      "discoveries": "A zip tie makes a great bleed block spacer",
+      "unresolved": "",
+      "currentNextAction": ""
+    },
+    {
+      "id": 2006,
+      "projectId": 1003,
+      "title": "Chain service",
+      "status": "COMPLETED",
+      "startedAt": 1788264000000,
+      "endedAt": 1788350400000,
+      "displayNumber": 1,
+      "completed": "Waxed and quiet",
+      "discoveries": "",
+      "unresolved": "",
+      "currentNextAction": ""
+    }
+  ],
+  "entries": [
+    {
+      "id": 3001,
+      "sessionId": 2001,
+      "text": "Home screen: swap inbox card to secondaryContainer and give revisit items a surfaceContainer fill. Also bump bottom padding to 120dp for breathing room.",
+      "kind": "NOTE",
+      "createdAt": 1789560000000
+    },
+    {
+      "id": 3002,
+      "sessionId": 2001,
+      "text": "Press-scale spring animations (0.96 target) finally feel right on the interactive cards.",
+      "kind": "DISCOVERY",
+      "createdAt": 1789560000000
+    },
+    {
+      "id": 3003,
+      "sessionId": 2002,
+      "text": "Use Room + DataStore, keep JSON backup manual for full-fidelity transfers.",
+      "kind": "DECISION",
+      "createdAt": 1787918400000
+    },
+    {
+      "id": 3004,
+      "sessionId": 2003,
+      "text": "Does the timer model support two zones, or do I need a second unit?",
+      "kind": "QUESTION",
+      "createdAt": 1785758400000
+    },
+    {
+      "id": 3005,
+      "sessionId": 2004,
+      "text": "Order frost cloth and stake down the tomato cages.",
+      "kind": "TASK",
+      "createdAt": 1788782400000
+    },
+    {
+      "id": 3006,
+      "sessionId": 2005,
+      "text": "Bleed order: rear then front, keep the lever pressed at the lever.",
+      "kind": "NOTE",
+      "createdAt": 1788436800000
+    },
+    {
+      "id": 3007,
+      "sessionId": 2006,
+      "text": "Hot wax on a slightly warm chain flows better into the rollers.",
+      "kind": "DISCOVERY",
+      "createdAt": 1788264000000
+    }
+  ],
+  "captures": [
+    {
+      "id": 4001,
+      "text": "Idea: an \"on this day\" revisit shelf for memories",
+      "detail": "Slide-in from the home screen top",
+      "kind": "IDEA",
+      "isVoice": false,
+      "projectId": 1001,
+      "linkedSessionId": 2001,
+      "converted": "NONE",
+      "convertedTargetId": null,
+      "archived": false,
+      "createdAt": 1789560000000
+    },
+    {
+      "id": 4002,
+      "text": "Home screen refinements done (note)",
+      "detail": "See entry: colours + spacing + animation targets",
+      "kind": "NOTE",
+      "isVoice": false,
+      "projectId": 1001,
+      "linkedSessionId": 2001,
+      "converted": "PROJECT_NOTE",
+      "convertedTargetId": 3001,
+      "archived": false,
+      "createdAt": 1789560000000
+    },
+    {
+      "id": 4003,
+      "text": "Fix the restore back-navigation so restore doesn't jump to wrong place",
+      "detail": "Repro: finish a restore then press back",
+      "kind": "TODO",
+      "isVoice": false,
+      "projectId": 1001,
+      "linkedSessionId": 2001,
+      "converted": "NONE",
+      "convertedTargetId": null,
+      "archived": false,
+      "createdAt": 1789560000000
+    },
+    {
+      "id": 4004,
+      "text": "Q: should import merge or replace?",
+      "detail": "Decide semantics and document them",
+      "kind": "QUESTION",
+      "isVoice": false,
+      "projectId": 1001,
+      "linkedSessionId": 2001,
+      "converted": "NONE",
+      "convertedTargetId": null,
+      "archived": false,
+      "createdAt": 1789473600000
+    },
+    {
+      "id": 4005,
+      "text": "Voice capture: no fake audio, always fall back to text",
+      "detail": "",
+      "kind": "VOICE",
+      "isVoice": true,
+      "projectId": 1001,
+      "linkedSessionId": 2001,
+      "converted": "MEMORY",
+      "convertedTargetId": 5002,
+      "archived": true,
+      "createdAt": 1789387200000
+    },
+    {
+      "id": 4006,
+      "text": "Drip timer runs 20 min at dawn",
+      "detail": "",
+      "kind": "NOTE",
+      "isVoice": false,
+      "projectId": 1002,
+      "linkedSessionId": null,
+      "converted": "NONE",
+      "convertedTargetId": null,
+      "archived": false,
+      "createdAt": 1788782400000
+    },
+    {
+      "id": 4007,
+      "text": "Idea: order frost cloth before first hard frost",
+      "detail": "",
+      "kind": "IDEA",
+      "isVoice": false,
+      "projectId": 1002,
+      "linkedSessionId": null,
+      "converted": "NONE",
+      "convertedTargetId": null,
+      "archived": false,
+      "createdAt": 1788868800000
+    },
+    {
+      "id": 4008,
+      "text": "Wax the chain every 200 km",
+      "detail": "",
+      "kind": "TODO",
+      "isVoice": false,
+      "projectId": 1003,
+      "linkedSessionId": null,
+      "converted": "TASK",
+      "convertedTargetId": 6002,
+      "archived": false,
+      "createdAt": 1788436800000
+    }
+  ],
+  "memories": [
+    {
+      "id": 5001,
+      "title": "How to resolve a restore/import conflict",
+      "content": "Merge is additive and keyed by id; restore is a full same-id replacement guarded by a local safety backup.",
+      "type": "FIX",
+      "tags": "backup restore merge",
+      "projectId": 1001,
+      "sourceSessionId": 2001,
+      "sourceCaptureId": 4004,
+      "sourceType": "CAPTURE",
+      "revisitAt": 1789560000000,
+      "archived": false,
+      "createdAt": 1789473600000
+    },
+    {
+      "id": 5002,
+      "title": "Voice capture policy",
+      "content": "Never fabricate audio; if the platform can't record, fall back to a plain text capture.",
+      "type": "FIX",
+      "tags": "voice capture a11y",
+      "projectId": 1001,
+      "sourceSessionId": 2001,
+      "sourceCaptureId": 4005,
+      "sourceType": "CAPTURE",
+      "revisitAt": 1789905600000,
+      "archived": false,
+      "createdAt": 1789387200000
+    },
+    {
+      "id": 5003,
+      "title": "Compose press-scale animation recipe",
+      "content": "Use animateFloatAsState with a 0.96 scale target and a spring with medium bounce; feels tactile without overshooting.",
+      "type": "IDEA",
+      "tags": "compose animation",
+      "projectId": 1002,
+      "sourceSessionId": null,
+      "sourceCaptureId": null,
+      "sourceType": "MANUAL",
+      "revisitAt": 1790251200000,
+      "archived": false,
+      "createdAt": 1789300800000
+    },
+    {
+      "id": 5004,
+      "title": "Grandma's tomato sauce base",
+      "content": "Sweat onion and garlic slow, add a pinch of sugar, then the tomatoes and a fresh basil stem.",
+      "type": "RECIPE",
+      "tags": "cooking family",
+      "projectId": null,
+      "sourceSessionId": null,
+      "sourceCaptureId": null,
+      "sourceType": "MANUAL",
+      "revisitAt": null,
+      "archived": false,
+      "createdAt": 1787054400000
+    },
+    {
+      "id": 5005,
+      "title": "Bed layout after winterizing",
+      "content": "Tomatoes south row, greens in shade pocket, drip along the north edge.",
+      "type": "OTHER",
+      "tags": "garden layout",
+      "projectId": 1002,
+      "sourceSessionId": 2005,
+      "sourceCaptureId": null,
+      "sourceType": "SESSION",
+      "revisitAt": 1789473600000,
+      "archived": false,
+      "createdAt": 1788436800000
+    }
+  ],
+  "tasks": [
+    {
+      "id": 6001,
+      "text": "Order frost cloth for the raised beds",
+      "tag": "garden",
+      "projectId": 1002,
+      "captureId": 4007,
+      "dueAt": 1789905600000,
+      "done": false,
+      "createdAt": 1788868800000
+    },
+    {
+      "id": 6002,
+      "text": "Chain wax every 200 km (recurring)",
+      "tag": "bike",
+      "projectId": 1003,
+      "captureId": 4008,
+      "dueAt": 1790251200000,
+      "done": false,
+      "createdAt": 1788436800000
+    },
+    {
+      "id": 6003,
+      "text": "Draft the AGENTS.md project rules",
+      "tag": "meta",
+      "projectId": 1001,
+      "captureId": null,
+      "dueAt": 1789732800000,
+      "done": false,
+      "createdAt": 1789560000000
+    },
+    {
+      "id": 6004,
+      "text": "Test the dummy backup restore on a clean install",
+      "tag": "testing",
+      "projectId": 1001,
+      "captureId": null,
+      "dueAt": null,
+      "done": false,
+      "createdAt": 1789560000000
+    },
+    {
+      "id": 6005,
+      "text": "Double-check timer battery before winter",
+      "tag": "garden",
+      "projectId": null,
+      "captureId": null,
+      "dueAt": 1789560000000,
+      "done": true,
+      "createdAt": 1788609600000
+    }
+  ]
+}
