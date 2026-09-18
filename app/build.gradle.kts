@@ -18,9 +18,24 @@ android {
         versionName = "1.0"
     }
 
+    signingConfigs {
+        create("stableDebug") {
+            // One committed debug key so every CI build reuses the same
+            // signature. Debug-only convenience key (password is the standard
+            // "android"): it lets a new CI build install straight over an
+            // older one instead of forcing an uninstall/reinstall.
+            storeFile = rootProject.file("keystore/mindrelay-debug.p12")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+            storeType = "pkcs12"
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("stableDebug")
         }
         getByName("release") {
             isMinifyEnabled = false

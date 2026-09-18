@@ -289,4 +289,23 @@ class BackupStoreTest {
         val t = task(6, projectId = 1)
         BackupStore.validateIntegrity(doc(listOf(p), listOf(s), listOf(e), listOf(c), listOf(m), listOf(t)))
     }
+
+    @Test
+    fun shippedSampleBackupParsesAndValidates() {
+        // Guards the committed dummy dataset (app/src/test/resources/backup/
+        // mindrelay-sample-backup.json) against any drift from the real parse
+        // and validation rules: if the rules tighten, this fails and forces the
+        // sample to stay restorable.
+        val text = javaClass.getResourceAsStream("/backup/mindrelay-sample-backup.json")
+            ?.bufferedReader()?.use { it.readText() }
+            ?: error("missing test resource: /backup/mindrelay-sample-backup.json")
+        val parsed = BackupStore.parseBackupText(text)
+        BackupStore.validateIntegrity(parsed)
+        assertTrue(parsed.projects.isNotEmpty())
+        assertTrue(parsed.sessions.isNotEmpty())
+        assertTrue(parsed.entries.isNotEmpty())
+        assertTrue(parsed.captures.isNotEmpty())
+        assertTrue(parsed.memories.isNotEmpty())
+        assertTrue(parsed.tasks.isNotEmpty())
+    }
 }

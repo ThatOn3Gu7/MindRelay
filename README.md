@@ -75,6 +75,10 @@ transactional repository rather than by the DB engine.
   partial restore is possible.
 - Settings (theme, capture defaults, reminders) are preferences and are
   **not** part of the JSON backup.
+- A fully populated sample for restore/import testing ships at
+  `docs/samples/mindrelay-sample-backup.json`, covering projects, sessions,
+  entries, captures, memories and tasks with realistic cross-references. It is
+  re-validated in CI by `BackupStoreTest.shippedSampleBackupParsesAndValidates`.
 
 ### Android system backup
 
@@ -102,6 +106,12 @@ does not enable any recording.
 
 The debug APK is produced at `app/build/outputs/apk/debug/app-debug.apk`.
 
+Debug builds are signed with a **committed stable debug key**
+(`keystore/mindrelay-debug.p12`, password/alias = `android`/`androiddebugkey`),
+so every build — local or CI — shares one signature and a new CI build installs
+straight over an older one instead of forcing an uninstall/reinstall. This is a
+debug-only convenience key; it must never sign anything user-facing.
+
 > The version matrix (material3 1.5.0-alpha22, Compose BOM 2026.08.00, AGP 9.2.1,
 > Gradle 9.5.0, Kotlin 2.3.21, KSP 2.3.9, Room 2.8.4) mirrors the official
 > Google `compose-samples` sample so the M3 Expressive APIs resolve correctly.
@@ -112,3 +122,12 @@ One canonical workflow (`.github/workflows/build-apk.yml`) runs on every push
 and pull request: it runs the unit tests, runs Android lint, builds the debug
 APK, and uploads the `mindrelay-debug-apk` artifact (plus build/lint/test
 diagnostics on failure).
+
+Two ways to get the built APK, with an important difference:
+
+- **Workflow artifact** (`mindrelay-debug-apk`, on the run's *Artifacts* tab) —
+  GitHub always wraps artifacts in a `.zip`, so you download a zip and unzip it
+  before installing. This is a GitHub limitation, not a project bug.
+- **Release asset** — every push to `main` publishes a **`mindrelay-latest`**
+  release whose asset downloads as a raw, directly installable `.apk`
+  (`mindrelay-debug-<sha>.apk`), since release assets are not zip-wrapped.
