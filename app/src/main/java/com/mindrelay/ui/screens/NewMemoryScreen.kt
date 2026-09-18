@@ -58,7 +58,6 @@ import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.components.MindDropdown
 import com.mindrelay.ui.components.MindTextField
-import com.mindrelay.ui.components.MindTopBar
 import com.mindrelay.ui.components.PillButton
 import com.mindrelay.ui.components.PillChip
 import com.mindrelay.ui.components.SectionLabel
@@ -212,7 +211,6 @@ fun NewMemoryScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long? = 
                             selected = type,
                             onSelect = { type = it },
                             leadingIcon = Icons.Rounded.Category,
-                            filled = true
                         )
                     }
                 }

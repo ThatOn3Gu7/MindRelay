@@ -64,7 +64,6 @@ import com.mindrelay.nav.MindRoute
 import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
-import com.mindrelay.ui.components.MindTopBar
 import com.mindrelay.ui.components.PillChip
 import com.mindrelay.ui.components.SectionLabel
 import com.mindrelay.util.millisToDate
