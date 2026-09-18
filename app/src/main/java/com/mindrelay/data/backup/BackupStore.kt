@@ -204,11 +204,11 @@ class BackupStore(private val db: AppDatabase) {
 
             // Required collections
             val projects = doc.optJSONArray("projects") ?: throw ImportResult.ParseError("Missing 'projects'")
-            _ = doc.optJSONArray("sessions") ?: throw ImportResult.ParseError("Missing 'sessions'")
-            _ = doc.optJSONArray("entries") ?: throw ImportResult.ParseError("Missing 'entries'")
+            doc.optJSONArray("sessions") ?: throw ImportResult.ParseError("Missing 'sessions'")
+            doc.optJSONArray("entries") ?: throw ImportResult.ParseError("Missing 'entries'")
             val captures = doc.optJSONArray("captures") ?: throw ImportResult.ParseError("Missing 'captures'")
-            _ = doc.optJSONArray("memories") ?: throw ImportResult.ParseError("Missing 'memories'")
-            _ = doc.optJSONArray("tasks") ?: throw ImportResult.ParseError("Missing 'tasks'")
+            doc.optJSONArray("memories") ?: throw ImportResult.ParseError("Missing 'memories'")
+            doc.optJSONArray("tasks") ?: throw ImportResult.ParseError("Missing 'tasks'")
 
             // Parse every row strictly before touching the database.
             val parsed = BackupDocument(
