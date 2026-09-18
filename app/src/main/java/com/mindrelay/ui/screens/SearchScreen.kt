@@ -46,6 +46,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -437,41 +438,46 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
                 },
                 label = "search_filter_transition",
                 modifier = Modifier.weight(1f)
-            ) { _ ->
-                if (rows.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-                        EmptySearchArt(query = q)
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 120.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        for ((type, groupRows) in groups) {
-                            item(key = "header_$type") {
-                                SearchSectionHeader(title = type, count = groupRows.size)
-                            }
-                            items(groupRows, key = { it.key }) { row ->
-                                ExpressiveSearchItem(
-                                    headline = row.title,
-                                    supporting = row.supporting,
-                                    icon = row.icon,
-                                    type = row.type,
-                                    onClick = {
-                                        when (row.screen) {
-                                            MindScreen.PROJECT_DETAIL -> nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
-                                            MindScreen.SESSION -> nav.navigate(MindScreen.SESSION, MindTransition.SLIDE_RIGHT, row.arg)
-                                            MindScreen.MEMORY_DETAIL -> nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
-                                            MindScreen.CAPTURE_DETAIL -> nav.navigate(MindScreen.CAPTURE_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
-                                            MindScreen.HOME -> nav.resetTo(
-                                                listOf(MindRoute(MindScreen.HOME)),
-                                                MindTransition.FADE,
-                                            )
-                                            else -> {}
-                                        }
-                                    },
-                                )
+            ) { targetFilter ->
+                // Key the content on the target filter so each tab's list has its
+                // own identity for AnimatedContent, and the target-state parameter
+                // is actually used by the transition.
+                key(targetFilter) {
+                    if (rows.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                            EmptySearchArt(query = q)
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 120.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            for ((type, groupRows) in groups) {
+                                item(key = "header_$type") {
+                                    SearchSectionHeader(title = type, count = groupRows.size)
+                                }
+                                items(groupRows, key = { it.key }) { row ->
+                                    ExpressiveSearchItem(
+                                        headline = row.title,
+                                        supporting = row.supporting,
+                                        icon = row.icon,
+                                        type = row.type,
+                                        onClick = {
+                                            when (row.screen) {
+                                                MindScreen.PROJECT_DETAIL -> nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
+                                                MindScreen.SESSION -> nav.navigate(MindScreen.SESSION, MindTransition.SLIDE_RIGHT, row.arg)
+                                                MindScreen.MEMORY_DETAIL -> nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
+                                                MindScreen.CAPTURE_DETAIL -> nav.navigate(MindScreen.CAPTURE_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
+                                                MindScreen.HOME -> nav.resetTo(
+                                                    listOf(MindRoute(MindScreen.HOME)),
+                                                    MindTransition.FADE,
+                                                )
+                                                else -> {}
+                                            }
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
