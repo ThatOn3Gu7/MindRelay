@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.IntOffset
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.screens.CaptureDetailScreen
 import com.mindrelay.ui.screens.DataBackupScreen
@@ -51,7 +52,7 @@ fun MindNavHost(vm: AppViewModel, nav: MindNavController) {
     // System back gesture / button pops the stack (transition plays in reverse).
     BackHandler(enabled = nav.canPop) { nav.pop() }
 
-    val spatial: FiniteAnimationSpec<Int> = spring(
+    val spatial: FiniteAnimationSpec<IntOffset> = spring(
         dampingRatio = SpringBounce,
         stiffness = 420f,
     )
@@ -63,8 +64,7 @@ fun MindNavHost(vm: AppViewModel, nav: MindNavController) {
         change.transition == MindTransition.SLIDE_UP ->
             slideInVertically(spatial) { it } + fadeIn(tween(160))
         change.transition == MindTransition.EXPAND ->
-            scaleIn(initialScale = 0.6f, animationSpec = spring(dampingRatio = SpringBounce))
-            + fadeIn(tween(150))
+            scaleIn(initialScale = 0.6f, animationSpec = spring<Float>(dampingRatio = SpringBounce)) + fadeIn(tween(150))
         change.backward -> slideInHorizontally(spatial) { -it / 6 }
         else -> slideInHorizontally(spatial) { it }
     }

@@ -3,9 +3,7 @@ package com.mindrelay.ui.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +31,7 @@ fun TabScaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = topBar,
         bottomBar = { MindNavBar(nav, selected) },
-        floatingActionButton = fab,
+        floatingActionButton = fab ?: {},
         floatingActionButtonPosition = FabPosition.End,
     ) { padding ->
         Box(
