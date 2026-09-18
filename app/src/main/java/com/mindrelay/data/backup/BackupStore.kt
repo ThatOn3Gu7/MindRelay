@@ -237,12 +237,12 @@ class BackupStore(private val db: AppDatabase) {
 
         // Positive + unique ids per collection.
         val idSets: List<Pair<String, Set<Long>>> = listOf(
-            "projects" to d.projects.map { it.id },
-            "sessions" to d.sessions.map { it.id },
-            "entries" to d.entries.map { it.id },
-            "captures" to d.captures.map { it.id },
-            "memories" to d.memories.map { it.id },
-            "tasks" to d.tasks.map { it.id },
+            "projects" to d.projects.map { it.id }.toSet(),
+            "sessions" to d.sessions.map { it.id }.toSet(),
+            "entries" to d.entries.map { it.id }.toSet(),
+            "captures" to d.captures.map { it.id }.toSet(),
+            "memories" to d.memories.map { it.id }.toSet(),
+            "tasks" to d.tasks.map { it.id }.toSet(),
         )
         for ((name, ids) in idSets) {
             val dup = ids.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
@@ -357,7 +357,7 @@ class BackupStore(private val db: AppDatabase) {
         }
     }
 
-    private fun createSafetyBackup(context: Context) {
+    private suspend fun createSafetyBackup(context: Context) {
         try {
             val dir = context.filesDir
             val bytes = JSONObject().apply {
@@ -388,7 +388,9 @@ class BackupStore(private val db: AppDatabase) {
 
 sealed interface ImportResult {
     data class Ok(val projects: Int, val captures: Int, val memories: Int, val warnings: String = "") : ImportResult
-    data class ParseError(val reason: String) : ImportResult
+    /** A validation failure; thrown (and catchable as an Exception) so parse
+     *  aborts immediately, but always surfaced to the UI as this sealed type. */
+    data class ParseError(val reason: String) : Exception(reason), ImportResult
 }
 
 sealed interface RestoreResult {

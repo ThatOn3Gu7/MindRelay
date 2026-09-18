@@ -99,11 +99,11 @@ abstract class AppDatabase : RoomDatabase() {
                     db.execSQL("DELETE FROM session_entries WHERE sessionId IS NOT NULL AND sessionId NOT IN (SELECT id FROM sessions)")
                     db.execSQL("DELETE FROM sessions WHERE projectId IS NOT NULL AND projectId NOT IN (SELECT id FROM projects)")
 
-                    rebuildSessions(db)
-                    rebuildSessionEntries(db)
-                    rebuildCaptures(db)
-                    rebuildMemories(db)
-                    rebuildTasks(db)
+                    db.rebuildSessions()
+                    db.rebuildSessionEntries()
+                    db.rebuildCaptures()
+                    db.rebuildMemories()
+                    db.rebuildTasks()
 
                     // Declared indices (projects keeps its original columns and
                     // only gains indices, which apply in place).
