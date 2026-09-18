@@ -25,12 +25,12 @@ change, newest first within a category.
 
 - Fixed a compile break in the Data & Backup screen from an import that pointed
   `ConfirmDialog` at the wrong package.
-- CI no longer runs the workflow twice per pushed commit: the `pull_request`
-  trigger is now limited to `opened`/`reopened` instead of also firing on
-  `synchronize`.
 
 ### Improved
 
 - A read-write test in `BackupStoreTest` now parses and validates the shipped
   sample backup on every CI run, so the fixture can never silently drift from
   the real validation rules.
+- CI no longer runs the workflow twice per pushed commit: the `pull_request`
+  trigger is now limited to `opened`/`reopened` instead of also firing on
+  `synchronize`.
