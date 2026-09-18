@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -69,6 +71,7 @@ import com.mindrelay.nav.MindRoute
 import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
+import com.mindrelay.ui.components.MindTopBar
 import com.mindrelay.ui.components.SectionLabel
 import com.mindrelay.util.relativeAgo
 
@@ -91,12 +94,12 @@ private fun kindIcon(kind: CaptureKind): ImageVector = when (kind) {
 @Composable
 private fun RecKindChip(kind: CaptureKind) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = CircleShape,
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -126,18 +129,18 @@ private fun ExpressiveInteractiveItem(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
-    // Smooth, tactile scaling animation - only scales if it's clickable
-    val targetScale = if (onClick != null && isPressed) 0.96f else 1f
+    // Smooth tactile scaling spring animation
+    val targetScale = if (onClick != null && isPressed) 0.97f else 1f
     val scale by animateFloatAsState(
         targetValue = targetScale,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 600f),
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 500f),
         label = "interactive_item_scale"
     )
 
     Surface(
         onClick = onClick ?: {},
         enabled = onClick != null,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         interactionSource = interactionSource,
         modifier = Modifier
@@ -153,16 +156,16 @@ private fun ExpressiveInteractiveItem(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = iconContainerColor,
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(48.dp)
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
                         tint = iconContentColor,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -210,7 +213,6 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
     LaunchedEffect(Unit) { isVisible = true }
 
     if (capture == null) {
-        // Fallback for null state, un-animated for simplicity
         Text("This capture is no longer available.", modifier = Modifier.padding(16.dp))
         return
     }
@@ -245,8 +247,8 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
         AnimatedVisibility(
             visible = isVisible,
             enter = fadeIn(tween(300)) + slideInVertically(
-                initialOffsetY = { 60 },
-                animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f)
+                initialOffsetY = { 40 },
+                animationSpec = spring(dampingRatio = 0.8f, stiffness = 350f)
             ),
             modifier = Modifier.fillMaxSize()
         ) {
@@ -255,54 +257,59 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                // Kind Chip & Provenance Line
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Kind Chip & Metadata Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     RecKindChip(kind = capture.kind)
                     Text(
                         text = if (capture.isVoice)
-                            "Captured ${relativeAgo(capture.createdAt)} · voice entry · no audio stored"
+                            "${relativeAgo(capture.createdAt)} · Voice"
                         else
-                            "Captured ${relativeAgo(capture.createdAt)} · text entry",
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                            "${relativeAgo(capture.createdAt)} · Text",
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
-                // Main Content Card - Soft, spacious, elevated feel
+                // Main Content Display Hero Card
                 Surface(
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(28.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         Text(
                             text = capture.text,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            lineHeight = MaterialTheme.typography.titleLarge.lineHeight * 1.1f
+                            lineHeight = MaterialTheme.typography.headlineSmall.lineHeight * 1.15f
                         )
                         if (capture.detail.isNotBlank() && capture.detail != capture.text) {
                             Text(
                                 text = capture.detail,
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.3f
+                                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.35f
                             )
                         }
                     }
                 }
 
-                // Linked Items Section (now matching the tactile Expressive pattern)
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Linked Context Group
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SectionLabel("Linked context")
                     ExpressiveInteractiveItem(
                         headline = "Linked project",
-                        supporting = linkedProject?.name ?: "None",
+                        supporting = linkedProject?.name ?: "None linked",
                         icon = Icons.Rounded.FolderOpen,
                         iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                         iconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -312,23 +319,24 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                     )
                     ExpressiveInteractiveItem(
                         headline = "Linked session",
-                        supporting = capture.linkedSessionId?.let { "Session #$it" } ?: "None",
+                        supporting = capture.linkedSessionId?.let { "Session #$it" } ?: "None linked",
                         icon = Icons.Rounded.Schedule,
                         iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                         iconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        onClick = null, // Sessions aren't clickable in this flow yet
+                        onClick = null,
                     )
                 }
 
-                // Convert Section
-                Spacer(modifier = Modifier.height(8.dp))
-                SectionLabel("Convert to")
-                
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Actionable Transformations Section
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SectionLabel("Convert to")
+                    
                     ExpressiveInteractiveItem(
                         headline = "Memory",
                         supporting = "Durable knowledge Future You can find",
                         icon = Icons.Rounded.Bookmark,
+                        iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        iconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         onClick = {
                             vm.launchAndRun(
                                 block = {
@@ -351,6 +359,8 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                         headline = "Project note",
                         supporting = "Attach to a project or current session",
                         icon = Icons.Rounded.FolderOpen,
+                        iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        iconContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                         onClick = {
                             val pid = capture.projectId ?: projects.firstOrNull { it.status == ProjectStatus.ACTIVE }?.id
                                 ?: projects.firstOrNull()?.id
@@ -379,6 +389,8 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                         headline = "Task",
                         supporting = "Create a secondary to-do item",
                         icon = Icons.Rounded.CheckBox,
+                        iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        iconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         onClick = {
                             vm.launchAndRun(
                                 block = {
@@ -398,9 +410,9 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-                // Archive Action Button with its own tactile spring state
+                // Archive Action Button
                 val archiveInteractionSource = remember { MutableInteractionSource() }
                 val isArchivePressed by archiveInteractionSource.collectIsPressedAsState()
                 val archiveScale by animateFloatAsState(
@@ -427,8 +439,8 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
                             scaleX = archiveScale
                             scaleY = archiveScale
                         },
-                    shape = RoundedCornerShape(28.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
+                    shape = CircleShape,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
                 ) {
                     Icon(Icons.Rounded.Archive, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
