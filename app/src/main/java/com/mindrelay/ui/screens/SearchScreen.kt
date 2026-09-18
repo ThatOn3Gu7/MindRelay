@@ -1,49 +1,76 @@
 package com.mindrelay.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.CheckBox
 import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Help
+import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material.icons.rounded.Notes
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mindrelay.data.model.CaptureKind
-import com.mindrelay.nav.MindNavController
-import com.mindrelay.nav.MindScreen
-import com.mindrelay.nav.MindTransition
-import com.mindrelay.ui.AppViewModel
-import com.mindrelay.ui.components.BodyListItem
-import com.mindrelay.ui.components.ConnectedChipGroup
-import com.mindrelay.ui.components.SectionLabel
-import com.mindrelay.util.relativeAgo
+
 import com.mindrelay.data.db.CaptureEntity
 import com.mindrelay.data.db.ProjectEntity
 import com.mindrelay.data.db.SessionEntity
+import com.mindrelay.data.model.CaptureKind
+import com.mindrelay.nav.MindNavController
+import com.mindrelay.nav.MindRoute
+import com.mindrelay.nav.MindScreen
+import com.mindrelay.nav.MindTransition
+import com.mindrelay.ui.AppViewModel
+import com.mindrelay.ui.components.ConnectedChipGroup
+import com.mindrelay.util.relativeAgo
 
 private data class SearchRow(
     val key: String,
@@ -57,9 +84,202 @@ private data class SearchRow(
 
 private const val MAX_RESULTS_PER_GROUP = 40
 
+private fun kindIcon(kind: CaptureKind): ImageVector = when (kind) {
+    CaptureKind.IDEA -> Icons.Rounded.Lightbulb
+    CaptureKind.TODO -> Icons.Rounded.CheckBox
+    CaptureKind.QUESTION -> Icons.Rounded.Help
+    CaptureKind.NOTE -> Icons.Rounded.Notes
+    CaptureKind.VOICE -> Icons.Rounded.Mic
+}
+
+private fun kindLabel(c: CaptureEntity): String = when (c.kind) {
+    CaptureKind.IDEA -> "Idea"
+    CaptureKind.TODO -> "To-do"
+    CaptureKind.QUESTION -> "Question"
+    CaptureKind.NOTE -> "Note"
+    CaptureKind.VOICE -> "Voice"
+}
+
+private fun kindIcon(c: CaptureEntity): ImageVector = kindIcon(c.kind)
+
+@Composable
+private fun EmptySearchArt(query: String) {
+    val isSearch = query.isNotBlank()
+    
+    val icon = if (isSearch) Icons.Rounded.Search else Icons.Rounded.Tune
+    val headline = if (isSearch) "No matches found" else "Search your mind"
+    val body = if (isSearch)
+        "We couldn't find anything matching \"$query\". Try searching for different keywords or changing filters."
+    else
+        "Quickly search across projects, session notes, tasks, durable memories, and captured thoughts."
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp, horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(140.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(40.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(120.dp)
+            ) {}
+            Surface(
+                shape = RoundedCornerShape(32.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.size(80.dp)
+            ) {}
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(40.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Text(
+            text = headline,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        Text(
+            text = body,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
+        )
+    }
+}
+
+@Composable
+private fun SearchSectionHeader(title: String, count: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp, bottom = 8.dp, start = 4.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) {
+            Text(
+                text = "$count",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExpressiveSearchItem(
+    headline: String,
+    supporting: String,
+    icon: ImageVector,
+    type: String,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 600f),
+        label = "search_item_scale"
+    )
+
+    val (iconContainerColor, iconContentColor) = when (type) {
+        "Projects" -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+        "Sessions" -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+        "Tasks" -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+        "Memories" -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+        else -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+    }
+
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        interactionSource = interactionSource,
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = iconContainerColor,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconContentColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = headline,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (supporting.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = supporting,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
+    // -------------------------------------------------------------------------
+    // DATA AND STATE FLOW (UNTOUCHED)
+    // -------------------------------------------------------------------------
     val repo = vm.repository
     val projects by repo.projects.all().collectAsStateWithLifecycle(initialValue = emptyList())
     val sessions by repo.sessions.all().collectAsStateWithLifecycle(initialValue = emptyList())
@@ -73,8 +293,6 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
 
     val q = query.trim()
     val rows = remember(projects, sessions, entries, captures, memories, tasks, q, filter) {
-        // Index id → row once, then answer "which session/name does this belong
-        // to?" in O(1) instead of scanning the lists per entry.
         val projectsById: Map<Long, ProjectEntity> = projects.associateBy { it.id }
         val sessionsById: Map<Long, SessionEntity> = sessions.associateBy { it.id }
         fun projectName(p: Long?): String = p?.let { projectsById[it]?.name } ?: ""
@@ -156,8 +374,8 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
         out
     }
 
-    // Group by type preserving order.
     val groups = rows.groupBy { it.type }
+    // -------------------------------------------------------------------------
 
     TabScaffold(
         nav = nav,
@@ -169,16 +387,17 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
             )
         },
     ) { _ ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            item {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Search field & Horizontal chip bar pinned at top
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            ) {
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
-                    placeholder = { Text("pump timer") },
+                    placeholder = { Text("Search anything...") },
                     leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                     trailingIcon = { Icon(Icons.Rounded.Mic, contentDescription = null) },
                     singleLine = true,
@@ -191,71 +410,73 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
                         unfocusedBorderColor = Color.Transparent,
                     ),
                 )
-            }
-            item {
-                ConnectedChipGroup(
-                    options = listOf("All", "Projects", "Sessions", "Tasks", "Memories", "Captures"),
-                    selected = filter,
-                    onSelect = { filter = it },
-                    modifier = Modifier.padding(vertical = 8.dp),
-                )
-            }
-            if (rows.isEmpty()) {
-                item {
-                    Text(
-                        if (q.isBlank()) "Type to search across projects, sessions, captures, memories, tasks and tags."
-                        else "No matches for \"$q\".",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ConnectedChipGroup(
+                        options = listOf("All", "Projects", "Sessions", "Tasks", "Memories", "Captures"),
+                        selected = filter,
+                        onSelect = { filter = it },
                     )
                 }
             }
-            for ((type, groupRows) in groups) {
-                item {
-                    SectionLabel(type, size = 13, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
-                }
-                items(groupRows, key = { it.key }) { row ->
-                    BodyListItem(
-                        headline = row.title,
-                        supporting = row.supporting,
-                        icon = row.icon,
-                        onClick = {
-                            when (row.screen) {
-                                MindScreen.PROJECT_DETAIL -> nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
-                                MindScreen.SESSION -> nav.navigate(MindScreen.SESSION, MindTransition.SLIDE_RIGHT, row.arg)
-                                MindScreen.MEMORY_DETAIL -> nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
-                                MindScreen.CAPTURE_DETAIL -> nav.navigate(MindScreen.CAPTURE_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
-                                // Tasks don't have a detail screen; navigate to the
-                                // task's project when possible, else Home.
-                                MindScreen.HOME -> nav.resetTo(
-                                    listOf(com.mindrelay.nav.MindRoute(MindScreen.HOME)),
-                                    MindTransition.FADE,
-                                )
-                                else -> {}
+
+            // Animated transition for list contents
+            AnimatedContent(
+                targetState = filter,
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(250, delayMillis = 50)) +
+                        scaleIn(initialScale = 0.95f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f)))
+                        .togetherWith(fadeOut(animationSpec = tween(150)))
+                },
+                label = "search_filter_transition",
+                modifier = Modifier.weight(1f)
+            ) { _ ->
+                if (rows.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                        EmptySearchArt(query = q)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 120.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        for ((type, groupRows) in groups) {
+                            item(key = "header_$type") {
+                                SearchSectionHeader(title = type, count = groupRows.size)
                             }
-                        },
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                            items(groupRows, key = { it.key }) { row ->
+                                ExpressiveSearchItem(
+                                    headline = row.title,
+                                    supporting = row.supporting,
+                                    icon = row.icon,
+                                    type = row.type,
+                                    onClick = {
+                                        when (row.screen) {
+                                            MindScreen.PROJECT_DETAIL -> nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
+                                            MindScreen.SESSION -> nav.navigate(MindScreen.SESSION, MindTransition.SLIDE_RIGHT, row.arg)
+                                            MindScreen.MEMORY_DETAIL -> nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
+                                            MindScreen.CAPTURE_DETAIL -> nav.navigate(MindScreen.CAPTURE_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
+                                            MindScreen.HOME -> nav.resetTo(
+                                                listOf(MindRoute(MindScreen.HOME)),
+                                                MindTransition.FADE,
+                                            )
+                                            else -> {}
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
-
-private fun kindIcon(kind: CaptureKind): ImageVector = when (kind) {
-    CaptureKind.IDEA -> Icons.Rounded.Bookmark
-    CaptureKind.TODO -> Icons.Rounded.CheckBox
-    CaptureKind.QUESTION -> Icons.Rounded.Schedule
-    CaptureKind.NOTE -> Icons.Rounded.Search
-    CaptureKind.VOICE -> Icons.Rounded.Mic
-}
-
-private fun kindLabel(c: CaptureEntity): String = when (c.kind) {
-    CaptureKind.IDEA -> "Idea"
-    CaptureKind.TODO -> "To-do"
-    CaptureKind.QUESTION -> "Question"
-    CaptureKind.NOTE -> "Note"
-    CaptureKind.VOICE -> "Voice"
-}
-
-private fun kindIcon(c: CaptureEntity): ImageVector = kindIcon(c.kind)
