@@ -1,6 +1,7 @@
 package com.mindrelay.ui.screens
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material.icons.Icons
@@ -53,7 +54,7 @@ fun MindNavBar(
 }
 
 @Composable
-private fun NavDest(
+private fun RowScope.NavDest(
     nav: MindNavController,
     screen: MindScreen,
     label: String,

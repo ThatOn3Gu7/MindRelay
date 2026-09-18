@@ -68,7 +68,7 @@ fun stopwatch(startedAt: Long): String {
 
 /** Revisit dates are stored as epoch day Int (room-safe). */
 fun epochDayToMillis(day: Int, tz: TimeZone = TimeZone.currentSystemDefault()): Long =
-    LocalDate.fromEpochDays(day).atStartOfDayIn(tz).toInstant(tz).toEpochMilliseconds()
+    LocalDate.fromEpochDays(day).atStartOfDayIn(tz).toEpochMilliseconds()
 
 fun millisToDate(ts: Long): LocalDate = at(ts).date
 

@@ -33,6 +33,7 @@ import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.components.MindTextField
 import com.mindrelay.ui.components.PillButton
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
