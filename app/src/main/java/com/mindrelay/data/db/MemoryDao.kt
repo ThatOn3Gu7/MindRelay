@@ -24,6 +24,13 @@ interface MemoryDao {
     @Query("SELECT * FROM memories WHERE archived = 0 AND (revisitAt IS NULL OR revisitAt <= :now) ORDER BY revisitAt IS NULL, revisitAt ASC LIMIT :limit")
     fun dueForRevisit(now: Long, limit: Int): Flow<List<MemoryEntity>>
 
+    /** Only memories actually due now ([revisitAt] set and not in the future). */
+    @Query("SELECT * FROM memories WHERE archived = 0 AND revisitAt IS NOT NULL AND revisitAt <= :now ORDER BY revisitAt ASC LIMIT :limit")
+    fun dueNow(now: Long, limit: Int): Flow<List<MemoryEntity>>
+
+    @Query("SELECT * FROM memories WHERE projectId = :projectId ORDER BY revisitAt IS NULL, revisitAt ASC, createdAt DESC")
+    fun byProject(projectId: Long): Flow<List<MemoryEntity>>
+
     @Insert
     suspend fun insert(item: MemoryEntity): Long
 

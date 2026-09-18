@@ -85,5 +85,11 @@ dependencies {
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
+    // Local JVM unit tests (data/repository/navigation logic). `org.json` is
+    // provided here explicitly because the Android framework's copy is stubbed
+    // in local unit tests, while BackupStore parses JSON via org.json.
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

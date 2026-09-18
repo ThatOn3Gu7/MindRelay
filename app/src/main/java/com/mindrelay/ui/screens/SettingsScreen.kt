@@ -34,9 +34,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mindrelay.data.model.CaptureKind
+import com.mindrelay.data.settings.toCaptureKindOrNull
 import com.mindrelay.nav.MindNavController
 import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
@@ -49,11 +50,12 @@ import com.mindrelay.ui.components.SectionLabel
 fun SettingsScreen(vm: AppViewModel, nav: MindNavController) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     var themeMenu by remember { mutableStateOf(false) }
+    var captureKindMenu by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         MindTopBar(
             title = "Settings",
-            onBack = { nav.navigate(MindScreen.HOME, MindTransition.SLIDE_RIGHT) },
+            onBack = { nav.popToRoot() },
         )
         DropdownMenu(expanded = themeMenu, onDismissRequest = { themeMenu = false }) {
             listOf("System", "Light", "Dark").forEach { opt ->
@@ -62,6 +64,19 @@ fun SettingsScreen(vm: AppViewModel, nav: MindNavController) {
                     onClick = {
                         themeMenu = false
                         vm.launch { vm.settingsStore.setTheme(opt) }
+                    },
+                )
+            }
+        }
+        DropdownMenu(expanded = captureKindMenu, onDismissRequest = { captureKindMenu = false }) {
+            // VOICE is intentionally excluded: capture is text-only today, so a
+            // voice "default" would leave Quick Capture with no selected chip.
+            CaptureKind.entries.filter { it != CaptureKind.VOICE }.forEach { kind ->
+                DropdownMenuItem(
+                    text = { Text(captureKindLabel(kind)) },
+                    onClick = {
+                        captureKindMenu = false
+                        vm.launch { vm.settingsStore.setDefaultCaptureKind(kind.name) }
                     },
                 )
             }
@@ -98,10 +113,20 @@ fun SettingsScreen(vm: AppViewModel, nav: MindNavController) {
                 onClick = { vm.launch { vm.settingsStore.setDefaultSave(if (settings.defaultSave == "Inbox") "Current project" else "Inbox") } },
                 trailing = { Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             )
+            BodyListItem(
+                headline = "Default capture kind",
+                supporting = settings.defaultCaptureKind.toCaptureKindOrNull()?.let {
+                    captureKindLabel(it)
+                } ?: settings.defaultCaptureKind,
+                icon = Icons.Rounded.Save,
+                onClick = { captureKindMenu = true },
+                trailing = { Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+            )
             SwitchRow(
                 title = "Voice capture available",
                 checked = settings.voiceCapture,
                 onChecked = { vm.launch { vm.settingsStore.setVoiceCapture(it) } },
+                supporting = "Text-only captures are always available",
             )
             SwitchRow(
                 title = "Automatic project linking",
@@ -144,11 +169,20 @@ fun SettingsScreen(vm: AppViewModel, nav: MindNavController) {
     }
 }
 
+private fun captureKindLabel(kind: CaptureKind): String = when (kind) {
+    CaptureKind.IDEA -> "Idea"
+    CaptureKind.TODO -> "To-do"
+    CaptureKind.QUESTION -> "Question"
+    CaptureKind.NOTE -> "Note"
+    CaptureKind.VOICE -> "Voice"
+}
+
 @Composable
 private fun SwitchRow(
     title: String,
     checked: Boolean,
     onChecked: (Boolean) -> Unit,
+    supporting: String? = null,
 ) {
     Row(
         Modifier
@@ -156,12 +190,20 @@ private fun SwitchRow(
             .padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
-        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            supporting?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
         Switch(
             checked = checked,
             onCheckedChange = onChecked,

@@ -118,25 +118,31 @@ fun NewProjectScreen(vm: AppViewModel, nav: MindNavController, projectId: Long? 
                 enabled = name.isNotBlank(),
                 onClick = {
                     val original = existing
-                    vm.launch {
-                        val targetId = if (editing && original != null) {
-                            repo.updateProject(
-                                original.copy(
-                                    name = name.trim(),
-                                    currentState = currentState.trim(),
-                                    nextAction = nextAction.trim(),
-                                    goal = goal.trim(),
+                    var targetId: Long? = null
+                    vm.launchAndRun(
+                        block = {
+                            if (editing && original != null) {
+                                repo.updateProject(
+                                    original.copy(
+                                        name = name.trim(),
+                                        currentState = currentState.trim(),
+                                        nextAction = nextAction.trim(),
+                                        goal = goal.trim(),
+                                    )
                                 )
+                                targetId = original.id
+                            } else {
+                                targetId = repo.createProject(name, currentState, nextAction, goal)
+                            }
+                            null
+                        },
+                        andThen = {
+                            nav.resetTo(
+                                listOf(MindRoute(MindScreen.PROJECT_DETAIL, targetId.toString())),
+                                MindTransition.SLIDE_RIGHT,
                             )
-                            original.id
-                        } else {
-                            repo.createProject(name, currentState, nextAction, goal)
-                        }
-                        nav.resetTo(
-                            listOf(MindRoute(MindScreen.PROJECT_DETAIL, targetId.toString())),
-                            MindTransition.SLIDE_RIGHT,
-                        )
-                    }
+                        },
+                    )
                 },
                 modifier = Modifier.fillMaxWidth(),
             )

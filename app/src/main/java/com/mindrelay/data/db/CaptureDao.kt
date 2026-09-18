@@ -29,6 +29,14 @@ interface CaptureDao {
     @Query("SELECT * FROM captures WHERE kind = :kind")
     suspend fun byKind(kind: CaptureKind): List<CaptureEntity>
 
+    /** Captures attached to a session (project-note provenance + linked session). */
+    @Query("SELECT * FROM captures WHERE linkedSessionId = :sessionId")
+    fun bySession(sessionId: Long): Flow<List<CaptureEntity>>
+
+    /** Captures linked to a project (direct link or note attach). */
+    @Query("SELECT * FROM captures WHERE projectId = :projectId")
+    fun byProject(projectId: Long): Flow<List<CaptureEntity>>
+
     @Insert
     suspend fun insert(item: CaptureEntity): Long
 

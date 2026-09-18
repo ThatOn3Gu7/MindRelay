@@ -41,7 +41,6 @@ import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.components.BodyListItem
 import com.mindrelay.ui.components.ExpressiveCard
-import com.mindrelay.ui.components.PillButton
 import com.mindrelay.ui.components.PillChip
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -63,15 +62,14 @@ fun MemoryDetailScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long?
     }
 
     val relatedProject = memory.projectId?.let { pid -> projects.firstOrNull { it.id == pid } }
-    val projectSessions by repo.sessions.byProject(memory.projectId ?: -1L)
-        .collectAsStateWithLifecycle(initialValue = emptyList())
-    val sourceSession = memory.sourceSessionId?.let { sid -> projectSessions.firstOrNull { it.id == sid } }
+    val sourceSession by repo.sessions.byId(memory.sourceSessionId ?: -1L)
+        .collectAsStateWithLifecycle(initialValue = null)
     val tags = memory.tags.split(" ").filter { it.startsWith("#") }
 
     Column(Modifier.fillMaxSize()) {
         MindTopBar(
             title = "Memory",
-            onBack = { nav.navigate(MindScreen.MEMORIES, MindTransition.SLIDE_RIGHT) },
+            onBack = { nav.popToRoot() },
             actions = listOf(
                 Icons.Rounded.Edit to { nav.navigate(MindScreen.NEW_MEMORY, MindTransition.SLIDE_UP, memory.id.toString()) },
                 Icons.Rounded.MoreVert to { menuOpen = true },
@@ -82,16 +80,26 @@ fun MemoryDetailScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long?
                 text = { Text("Archive", color = MaterialTheme.colorScheme.onSurface) },
                 onClick = {
                     menuOpen = false
-                    vm.launch { repo.archiveMemory(memory.id) }
-                    nav.navigate(MindScreen.MEMORIES, MindTransition.SLIDE_RIGHT)
+                    vm.launchAndRun(
+                        block = {
+                            repo.archiveMemory(memory.id)
+                            null
+                        },
+                        andThen = { nav.resetTo(listOf(com.mindrelay.nav.MindRoute(MindScreen.MEMORIES)), MindTransition.SLIDE_DOWN) },
+                    )
                 },
             )
             DropdownMenuItem(
                 text = { Text("Delete memory", color = MaterialTheme.colorScheme.error) },
                 onClick = {
                     menuOpen = false
-                    vm.launch { repo.deleteMemory(memory.id) }
-                    nav.navigate(MindScreen.MEMORIES, MindTransition.SLIDE_RIGHT)
+                    vm.launchAndRun(
+                        block = {
+                            repo.deleteMemory(memory.id)
+                            null
+                        },
+                        andThen = { nav.resetTo(listOf(com.mindrelay.nav.MindRoute(MindScreen.MEMORIES)), MindTransition.SLIDE_DOWN) },
+                    )
                 },
             )
         }
@@ -157,8 +165,13 @@ fun MemoryDetailScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long?
 
             androidx.compose.material3.OutlinedButton(
                 onClick = {
-                    vm.launch { repo.archiveMemory(memory.id) }
-                    nav.navigate(MindScreen.MEMORIES, MindTransition.SLIDE_RIGHT)
+                    vm.launchAndRun(
+                        block = {
+                            repo.archiveMemory(memory.id)
+                            null
+                        },
+                        andThen = { nav.resetTo(listOf(com.mindrelay.nav.MindRoute(MindScreen.MEMORIES)), MindTransition.SLIDE_DOWN) },
+                    )
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),

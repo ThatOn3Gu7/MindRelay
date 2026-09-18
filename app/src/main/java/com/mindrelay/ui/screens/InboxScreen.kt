@@ -72,7 +72,7 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
         topBar = {
             MindTopBar(
                 title = "Inbox",
-                onBack = { nav.navigate(MindScreen.HOME, MindTransition.SLIDE_RIGHT) },
+                onBack = { nav.popToRoot() },
             )
         },
         fab = { QuickCaptureFab(nav) },

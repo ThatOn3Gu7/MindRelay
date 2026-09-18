@@ -23,7 +23,7 @@ class AppGraph(
                 context.applicationContext,
                 AppDatabase::class.java,
                 "mindrelay.db",
-            ).fallbackToDestructiveMigration(dropAllTables = true).build()
+            ).addMigrations(*AppDatabase.MIGRATIONS).build()
             val settings = SettingsStore(context.applicationContext)
             return AppGraph(
                 database = db,
