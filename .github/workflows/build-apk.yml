@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: Build debug APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -22,21 +22,34 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          packages: platforms;android-37 build-tools;37.0.0 platform-tools
-
+      # The ubuntu-24.04 runner ships ANDROID_HOME with platform android-37.0
+      # and build-tools 37.0.0 preinstalled, so no SDK download step is needed.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee build-log.txt
+
+      - name: Publish build log to job summary
+        if: failure()
+        run: |
+          {
+            echo '## Gradle build log (tail)'
+            echo '```text'
+            tail -n 600 build-log.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build-log.txt
+          if-no-files-found: ignore
 
       - name: Upload APK artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: mindrelay-debug-apk
