@@ -65,7 +65,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mindrelay.nav.MindNavController
 import com.mindrelay.ui.AppViewModel
-import com.mindrelay.ui.components.ConfirmDialog
 import com.mindrelay.ui.components.SectionLabel
 import kotlinx.coroutines.launch
 

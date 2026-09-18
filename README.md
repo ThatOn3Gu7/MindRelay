@@ -119,9 +119,14 @@ debug-only convenience key; it must never sign anything user-facing.
 ## CI
 
 One canonical workflow (`.github/workflows/build-apk.yml`) runs on every push
-and pull request: it runs the unit tests, runs Android lint, builds the debug
-APK, and uploads the `mindrelay-debug-apk` artifact (plus build/lint/test
-diagnostics on failure).
+and when a PR is opened/reopened: it runs the unit tests, runs Android lint,
+builds the debug APK, and uploads the `mindrelay-debug-apk` artifact (plus
+build/lint/test diagnostics on failure).
+
+Each pushed commit runs exactly **one** workflow. The `pull_request` trigger is
+limited to `opened`/`reopened` (not `synchronize`), otherwise every push to a
+PR branch would launch a duplicate run — the same commit reported once as
+`push` and again as `pull_request`.
 
 Two ways to get the built APK, with an important difference:
 
