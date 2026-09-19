@@ -20,9 +20,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.EventRepeat
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.TaskAlt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,8 +59,8 @@ private data class HomeNextAction(
     val text: String,
     val supporting: String,
     val isTask: Boolean,
-    val taskId: Long?,
     val projectId: Long?,
+    val captureId: Long?,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -223,7 +224,7 @@ fun HomeScreen(vm: AppViewModel, nav: MindNavController) {
                 key = "t${t.id}",
                 text = t.text,
                 supporting = projectById[t.projectId]?.name ?: t.tag.ifBlank { "Task" },
-                isTask = true, taskId = t.id, projectId = t.projectId,
+                isTask = true, projectId = t.projectId, captureId = t.captureId,
             )
         )
     }
@@ -235,7 +236,7 @@ fun HomeScreen(vm: AppViewModel, nav: MindNavController) {
                         key = "p${p.id}",
                         text = p.nextAction,
                         supporting = p.name,
-                        isTask = false, taskId = null, projectId = p.id,
+                        isTask = false, projectId = p.id, captureId = null,
                     )
                 )
             }
@@ -310,12 +311,20 @@ fun HomeScreen(vm: AppViewModel, nav: MindNavController) {
                     InteractiveActionItem(
                         headline = na.text,
                         supporting = na.supporting,
-                        icon = Icons.Rounded.CheckCircle,
+                        icon = if (na.isTask) Icons.Rounded.TaskAlt else Icons.Rounded.PlayArrow,
                         onClick = {
-                            if (na.isTask && na.taskId != null) {
-                                vm.launch { repo.setTaskDone(na.taskId, true) }
-                            } else if (na.projectId != null) {
-                                nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, na.projectId.toString())
+                            // Tapping a Next Action opens its context; it must
+                            // never complete/remove the item. Both task-backed
+                            // and project-derived actions open the project they
+                            // belong to; a task without a project falls back to
+                            // its origin capture.
+                            when {
+                                na.projectId != null -> nav.navigate(
+                                    MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, na.projectId.toString()
+                                )
+                                na.isTask && na.captureId != null -> nav.navigate(
+                                    MindScreen.CAPTURE_DETAIL, MindTransition.SLIDE_RIGHT, na.captureId.toString()
+                                )
                             }
                         }
                     )

@@ -28,6 +28,11 @@ change, newest first within a category.
 
 ### Fixed
 
+- Home "Next Actions" no longer disappear when tapped: tapping now navigates to
+  the item's context (task-backed actions open their project, or source capture
+  when unassigned; project-derived actions open their project) instead of
+  silently marking the task complete and removing it.
+
 - Fixed a compile break in the Data & Backup screen from an import that pointed
   `ConfirmDialog` at the wrong package.
 - Fixed a lint error in Search where an `AnimatedContent` content lambda ignored
