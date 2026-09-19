@@ -280,6 +280,31 @@ class BackupStoreTest {
     }
 
     @Test
+    fun rejectsMemorySourcedFromAnotherProject() {
+        // A memory assigned to project 1 must not claim a session (or capture)
+        // that lives on a different project — that would make its "Related
+        // project" contradict its "Source session/capture".
+        assertParseError {
+            BackupStore.validateIntegrity(
+                doc(
+                    projects = listOf(project(1), project(2)),
+                    sessions = listOf(session(20, projectId = 2, status = SessionStatus.COMPLETED, endedAt = 200L)),
+                    memories = listOf(memory(5, sourceSessionId = 20, sourceType = MemorySourceType.SESSION).copy(projectId = 1)),
+                )
+            )
+        }
+        assertParseError {
+            BackupStore.validateIntegrity(
+                doc(
+                    projects = listOf(project(1), project(2)),
+                    captures = listOf(capture(40).copy(projectId = 2)),
+                    memories = listOf(memory(5, sourceCaptureId = 40, sourceType = MemorySourceType.CAPTURE).copy(projectId = 1)),
+                )
+            )
+        }
+    }
+
+    @Test
     fun validDocumentValidates() {
         val p = project(1)
         val s = session(2, 1, status = SessionStatus.COMPLETED, endedAt = 200L)
@@ -307,5 +332,33 @@ class BackupStoreTest {
         assertTrue(parsed.captures.isNotEmpty())
         assertTrue(parsed.memories.isNotEmpty())
         assertTrue(parsed.tasks.isNotEmpty())
+
+        // Every memory's source session/capture (when present) must live on the
+        // same project as the memory itself, so in-app "Related project" and
+        // "Source session" never contradict each other.
+        val projectsById = parsed.projects.associateBy { it.id }
+        val sessionsById = parsed.sessions.associateBy { it.id }
+        val capturesById = parsed.captures.associateBy { it.id }
+        parsed.memories.forEach { m ->
+            m.sourceSessionId?.let { sid ->
+                val sourceProject = sessionsById[sid]?.projectId
+                if (sourceProject != null && m.projectId != null) {
+                    assertTrue(
+                        "memory ${m.id} (project ${m.projectId}) sources session $sid (project $sourceProject)",
+                        sourceProject == m.projectId,
+                    )
+                }
+            }
+            m.sourceCaptureId?.let { cid ->
+                val sourceProject = capturesById[cid]?.projectId
+                if (sourceProject != null && m.projectId != null) {
+                    assertTrue(
+                        "memory ${m.id} (project ${m.projectId}) sources capture $cid (project $sourceProject)",
+                        sourceProject == m.projectId,
+                    )
+                }
+            }
+        }
+        assertTrue(projectsById.isNotEmpty())
     }
 }

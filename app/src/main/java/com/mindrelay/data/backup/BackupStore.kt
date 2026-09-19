@@ -272,6 +272,13 @@ class BackupStore(private val db: AppDatabase) {
         val memoryIds = d.memories.map { it.id }.toHashSet()
         val taskIds = d.tasks.map { it.id }.toHashSet()
 
+        // Id → owning project lookups used to reject provenance that contradicts
+        // a row's project link (e.g. a memory assigned to project A but sourced
+        // from a session/capture on project B).
+        val sessionProject: Map<Long, Long> = d.sessions.associate { it.id to it.projectId }
+        val captureProject: Map<Long, Long> =
+            d.captures.filter { it.projectId != null }.associate { it.id to it.projectId!! }
+
         // Timestamps are sane (non-negative; future is tolerated for clockskew).
         fun checkTimestamps(table: String, values: List<Long>) {
             if (values.any { it < 0 }) fail("Negative timestamps found in '$table'")
@@ -325,6 +332,21 @@ class BackupStore(private val db: AppDatabase) {
             if (m.projectId != null && m.projectId !in projectIds) fail("Memory ${m.id} references missing project ${m.projectId}")
             if (m.sourceSessionId != null && m.sourceSessionId !in sessionIds) fail("Memory ${m.id} references missing session ${m.sourceSessionId}")
             if (m.sourceCaptureId != null && m.sourceCaptureId !in captureIds) fail("Memory ${m.id} references missing capture ${m.sourceCaptureId}")
+            // A memory's provenance must agree with its project link: it cannot
+            // belong to one project while its source session/capture lives in
+            // another (that would make the memory's "Related project" conflict
+            // with its "Source session/capture"). Manually-created memories may
+            // stay project-less without sources.
+            if (m.projectId != null && m.sourceSessionId != null) {
+                val sourceProject = sessionProject[m.sourceSessionId]
+                if (sourceProject != null && sourceProject != m.projectId)
+                    fail("Memory ${m.id} belongs to project ${m.projectId} but its source session ${m.sourceSessionId} belongs to project $sourceProject")
+            }
+            if (m.projectId != null && m.sourceCaptureId != null) {
+                val sourceProject = captureProject[m.sourceCaptureId]
+                if (sourceProject != null && sourceProject != m.projectId)
+                    fail("Memory ${m.id} belongs to project ${m.projectId} but its source capture ${m.sourceCaptureId} belongs to project $sourceProject")
+            }
             // Relationship consistency: when a row claims a capture/session source,
             // the referenced row must agree (both directions satisfied).
             if (m.sourceType == MemorySourceType.CAPTURE && m.sourceCaptureId == null) fail("Memory ${m.id} claims a capture source but has no sourceCaptureId")

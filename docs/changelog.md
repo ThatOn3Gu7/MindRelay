@@ -28,6 +28,17 @@ change, newest first within a category.
 
 ### Fixed
 
+- Search results no longer open the wrong screen: tapping a task result used to
+  bounce back to Home, so it now opens the task's owning project — or its source
+  capture when it has no project — matching the Home "Next Actions" convention.
+  A task with neither stays put instead of jumping to Home.
+
+- Backup validation now rejects a memory whose "Related project" contradicts its
+  "Source session"/"Source capture" (a memory cannot belong to one project while
+  its source lives in another), and the shipped sample backup was repaired so
+  its "Bed layout after winterizing" memory links the garden session that
+  produced it instead of a bicycle session.
+
 - Home "Next Actions" no longer disappear when tapped: tapping now navigates to
   the item's context (task-backed actions open their project, or source capture
   when unassigned; project-derived actions open their project) instead of

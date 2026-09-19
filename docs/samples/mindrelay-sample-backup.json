@@ -335,12 +335,12 @@
       "type": "OTHER",
       "tags": "garden layout",
       "projectId": 1002,
-      "sourceSessionId": 2005,
+      "sourceSessionId": 2003,
       "sourceCaptureId": null,
       "sourceType": "SESSION",
       "revisitAt": 1789473600000,
       "archived": false,
-      "createdAt": 1788436800000
+      "createdAt": 1789300800000
     }
   ],
   "tasks": [

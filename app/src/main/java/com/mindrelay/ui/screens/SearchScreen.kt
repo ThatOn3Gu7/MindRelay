@@ -66,7 +66,6 @@ import com.mindrelay.data.db.ProjectEntity
 import com.mindrelay.data.db.SessionEntity
 import com.mindrelay.data.model.CaptureKind
 import com.mindrelay.nav.MindNavController
-import com.mindrelay.nav.MindRoute
 import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
@@ -334,12 +333,27 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
             tasks.filter { "${it.text} ${it.tag} ${projectName(it.projectId)}".contains(q, true) }
                 .take(MAX_RESULTS_PER_GROUP)
                 .forEach { t ->
+                    // A task result opens the screen its displayed entity lives
+                    // in, never Home: the owning project first, falling back to
+                    // its origin capture (mirrors Home's Next Actions). Without
+                    // either context there is nothing specific to open, so the
+                    // row stays inert instead of dumping the user on Home.
+                    val taskScreen = when {
+                        t.projectId != null -> MindScreen.PROJECT_DETAIL
+                        t.captureId != null -> MindScreen.CAPTURE_DETAIL
+                        else -> null
+                    }
+                    val taskArg = when (taskScreen) {
+                        MindScreen.PROJECT_DETAIL -> t.projectId?.toString()
+                        MindScreen.CAPTURE_DETAIL -> t.captureId?.toString()
+                        else -> null
+                    }
                     out.add(
                         SearchRow(
                             key = "t${t.id}", type = "Tasks", title = t.text,
                             supporting = projectName(t.projectId).ifBlank { t.tag.ifBlank { "Task" } },
                             icon = Icons.Rounded.CheckBox,
-                            screen = MindScreen.HOME, arg = null,
+                            screen = taskScreen ?: MindScreen.HOME, arg = taskArg,
                         )
                     )
                 }
@@ -469,10 +483,11 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
                                                 MindScreen.SESSION -> nav.navigate(MindScreen.SESSION, MindTransition.SLIDE_RIGHT, row.arg)
                                                 MindScreen.MEMORY_DETAIL -> nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
                                                 MindScreen.CAPTURE_DETAIL -> nav.navigate(MindScreen.CAPTURE_DETAIL, MindTransition.SLIDE_RIGHT, row.arg)
-                                                MindScreen.HOME -> nav.resetTo(
-                                                    listOf(MindRoute(MindScreen.HOME)),
-                                                    MindTransition.FADE,
-                                                )
+                                                // A task with neither a project nor a
+                                                // capture has no specific screen to
+                                                // open; stay put rather than letting
+                                                // the tap bounce the user to Home.
+                                                MindScreen.HOME -> {}
                                                 else -> {}
                                             }
                                         },
