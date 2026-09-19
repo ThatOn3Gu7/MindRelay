@@ -8,7 +8,7 @@
       "name": "Compose Practise App",
       "status": "ACTIVE",
       "currentState": "UI shell building, nav working",
-      "nextAction": "Wire up the backup screen to the store",
+      "nextAction": "Draft the AGENTS.md project rules",
       "goal": "Ship a tiny offline memory app",
       "lastWorkedAt": 1789560000000,
       "createdAt": 1787054400000
@@ -18,7 +18,7 @@
       "name": "Home Garden Setup",
       "status": "PAUSED",
       "currentState": "Beds prepared for winter",
-      "nextAction": "Check the drip irrigation timer",
+      "nextAction": "Order frost cloth for the raised beds",
       "goal": "Fresh vegetables all year",
       "lastWorkedAt": 1788782400000,
       "createdAt": 1784462400000
@@ -46,7 +46,7 @@
       "completed": "",
       "discoveries": "Expressive cards look right on the home screen",
       "unresolved": "Backup restore UX still clunky",
-      "currentNextAction": "Finish the backup screen wiring"
+      "currentNextAction": "Draft the AGENTS.md project rules"
     },
     {
       "id": 2002,

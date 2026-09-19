@@ -360,5 +360,20 @@ class BackupStoreTest {
             }
         }
         assertTrue(projectsById.isNotEmpty())
+
+        // A project's next action must match its youngest open task. Otherwise
+        // tapping a Home "Next actions" entry opens a project whose "Next
+        // Action" hero shows a different (ghost) string — the exact mismatch a
+        // restored backup must never ship.
+        parsed.projects.forEach { project ->
+            if (project.nextAction.isBlank()) return@forEach
+            val topOpenTask = parsed.tasks
+                .filter { !it.done && it.projectId == project.id }
+                .minByOrNull { task -> task.dueAt ?: Long.MAX_VALUE }
+            assertTrue(
+                "project ${project.id} nextAction '${project.nextAction}' does not match its top open task",
+                topOpenTask != null && topOpenTask.text == project.nextAction,
+            )
+        }
     }
 }
