@@ -28,6 +28,14 @@ change, newest first within a category.
 
 ### Fixed
 
+- The sample backup no longer shows mismatched "next action" rows after restore:
+  each project's `nextAction` (and its active session's `currentNextAction`)
+  now matches that project's youngest open task — e.g. "Compose Practise App"
+  leads with "Draft the AGENTS.md project rules" instead of a ghost
+  "Wire up the backup screen to the store" string that no task carried. A test
+  now pins the invariant so a restored backup can never ship a next-action entry
+  that opens a project showing a different action.
+
 - Search results no longer open the wrong screen: tapping a task result used to
   bounce back to Home, so it now opens the task's owning project — or its source
   capture when it has no project — matching the Home "Next Actions" convention.
