@@ -1,67 +1,129 @@
 name: Build MindRelay APK
 
+# Canonical Android workflow for MindRelay: runs unit tests, runs lint, builds
+# the debug APK, and uploads the `mindrelay-debug-apk` artifact. Every pushed
+# commit runs exactly one workflow — see the triggers below.
 on:
   push:
     branches:
-      - main
-      - "arena/**"
+      - '**'
+  # PR checks run only when a PR is opened or reopened. New commits pushed to
+  # an already-open PR are handled by the `push` trigger above, so deliberately
+  # omitting `synchronize` here. Including it would launch a SECOND run for
+  # every push (the old "two workflows per commit" bug).
   pull_request:
+    types: [ opened, reopened ]
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build debug APK
+  tests-lint-build:
+    name: Test, lint and build
     runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
 
       # The ubuntu-24.04 runner ships ANDROID_HOME with platform android-37.0
       # and build-tools 37.0.0 preinstalled, so no SDK download step is needed.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Run unit tests
+        run: |
+          set -o pipefail
+          chmod +x ./gradlew
+          ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee unit-tests.log
+
+      - name: Run lint
+        run: |
+          set -o pipefail
+          ./gradlew :app:lintDebug --no-daemon --stacktrace 2>&1 | tee lint.log
+
       - name: Build debug APK
         run: |
           set -o pipefail
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee build-log.txt
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
           echo "--- APK outputs ---"
-          find app/build -name '*.apk' -print 2>/dev/null | tee apk-paths.txt
-          echo "--- debug outputs tree ---"
-          find app/build/outputs/apk -maxdepth 2 -type d -print 2>/dev/null | tee -a apk-paths.txt
+          mkdir -p apk
+          find app/build -name '*.apk' -print | tee apk-paths.txt
 
-      - name: Publish build log to job summary
+      - name: Publish report to job summary
         if: always()
         run: |
           {
-            echo '## Build log (tail)'
+            echo '## Unit tests (tail)'
             echo '```text'
-            tail -n 300 build-log.txt
+            tail -n 120 unit-tests.log 2>/dev/null || echo '(no unit test log)'
+            echo '```'
+            echo '## Lint (tail)'
+            echo '```text'
+            tail -n 120 lint.log 2>/dev/null || echo '(no lint log)'
+            echo '```'
+            echo '## Build (tail)'
+            echo '```text'
+            tail -n 120 build.log 2>/dev/null || echo '(no build log)'
             echo '```'
             echo '## APK paths found'
             echo '```text'
-            cat apk-paths.txt
+            cat apk-paths.txt 2>/dev/null || echo '(none)'
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload build log
+      - name: Upload debug APK artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-log
-          path: build-log.txt
-          if-no-files-found: ignore
-
-      - name: Upload APK artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
+          # GitHub always wraps workflow artifacts in a .zip download. This
+          # artifact is for CI verification logs, not a one-tap install path.
           name: mindrelay-debug-apk
-          path: app/build/outputs/**/*.apk
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/**/*.apk
           if-no-files-found: warn
+          retention-days: 14
+
+      - name: Publish debug APK as a release asset (main pushes)
+        # GitHub release assets are served as-is, so the APK downloads as a
+        # directly installable file instead of an artifact zip. main only, so
+        # a download link always points at the latest merged build. gh is
+        # preinstalled on the ubuntu-24.04 runner.
+        if: github.ref == 'refs/heads/main' && success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK="$(find app/build/outputs/apk -name '*.apk' | head -n 1)"
+          test -n "${APK:-}" || { echo "No APK found"; exit 1; }
+          echo "Publishing ${APK}"
+          NOTES="docs/changelog.md"
+          test -f "$NOTES" || { echo "# MindRelay" > "$NOTES"; }
+          SHA_SHORT="$(printf '%.7s' "${GITHUB_SHA}")"
+          # Rolling tag: replace the previous latest release + its tag.
+          gh release delete mindrelay-latest --yes --cleanup-tag >/dev/null 2>&1 || true
+          gh release create mindrelay-latest "${APK}#mindrelay-debug-${SHA_SHORT}.apk" \
+            --title "MindRelay debug (latest)" \
+            --notes-file "$NOTES" \
+            --target "${GITHUB_SHA}"
+          echo "Published: https://github.com/${GITHUB_REPOSITORY}/releases/tag/mindrelay-latest"
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-failure-diagnostics
+          path: |
+            app/build/test-results/
+            app/build/reports/
+            unit-tests.log
+            lint.log
+            build.log
+          if-no-files-found: ignore
+          retention-days: 14

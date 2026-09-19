@@ -15,7 +15,15 @@ enum class EntryKind { NOTE, DISCOVERY, QUESTION, DECISION, TASK }
 /** Where a memory came from (provenance), shown as chips on Memory Detail. */
 enum class MemorySourceType { CAPTURE, SESSION, MANUAL, NONE }
 
-/** What a capture has been converted into, if anything. */
+/** The lifecycle state of a work session. Stored as the enum name (see Converters). */
+enum class SessionStatus { ACTIVE, COMPLETED }
+
+/**
+ * What a capture has been converted into, if anything. `ARCHIVED` is kept only
+ * for backward compatibility with existing backups; new data never uses it —
+ * archiving is recorded via [com.mindrelay.data.db.CaptureEntity.archived] so
+ * the conversion provenance always survives archiving.
+ */
 enum class ConvertType {
     NONE, MEMORY, PROJECT_NOTE, TASK, ARCHIVED;
 

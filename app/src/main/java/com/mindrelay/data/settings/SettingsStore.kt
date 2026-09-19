@@ -28,7 +28,7 @@ class SettingsStore(private val context: Context) {
     data class Settings(
         val theme: String = "System",           // System | Light | Dark
         val defaultSave: String = "Inbox",      // Inbox | Current project
-        val defaultCaptureKind: String = "Idea",
+        val defaultCaptureKind: String = "Note", // matches CaptureEntity default
         val voiceCapture: Boolean = true,
         val autoLink: Boolean = false,
         val revisitReminders: Boolean = true,
@@ -39,7 +39,7 @@ class SettingsStore(private val context: Context) {
         Settings(
             theme = p[Keys.theme] ?: "System",
             defaultSave = p[Keys.defaultSave] ?: "Inbox",
-            defaultCaptureKind = p[Keys.defaultCaptureKind] ?: "Idea",
+            defaultCaptureKind = p[Keys.defaultCaptureKind] ?: "Note",
             voiceCapture = p[Keys.voiceCapture] ?: true,
             autoLink = p[Keys.autoLink] ?: false,
             revisitReminders = p[Keys.revisitReminders] ?: true,

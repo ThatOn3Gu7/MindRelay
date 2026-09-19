@@ -18,9 +18,24 @@ android {
         versionName = "1.0"
     }
 
+    signingConfigs {
+        create("stableDebug") {
+            // One committed debug key so every CI build reuses the same
+            // signature. Debug-only convenience key (password is the standard
+            // "android"): it lets a new CI build install straight over an
+            // older one instead of forcing an uninstall/reinstall.
+            storeFile = rootProject.file("keystore/mindrelay-debug.p12")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+            storeType = "pkcs12"
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("stableDebug")
         }
         getByName("release") {
             isMinifyEnabled = false
@@ -84,6 +99,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+
+    // Local JVM unit tests (data/repository/navigation logic). `org.json` is
+    // provided here explicitly because the Android framework's copy is stubbed
+    // in local unit tests, while BackupStore parses JSON via org.json.
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
