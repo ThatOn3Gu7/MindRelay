@@ -24,15 +24,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -42,6 +44,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +61,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mindrelay.data.model.MemoryType
 
 // ---------------------------------------------------------------------------
 // Section label — bold, sized, onSurface.
@@ -293,9 +297,27 @@ fun MindTextField(
 }
 
 // ---------------------------------------------------------------------------
-// Dropdown — text-field look with arrow_drop_down; opens an exposed menu.
+// Dropdown — anchored exposed menu (canonical M3 pattern). The whole field is
+// tappable, and the menu is anchored to the field via menuAnchor, so opening it
+// does not rely on a stacked text-field click listener.
 // ---------------------------------------------------------------------------
 
+/** Two-way label/type mapping, shared by memory fields so a label always maps
+ *  back to exactly the same [MemoryType]. */
+@Immutable
+private data class MemoryTypeOption(val label: String, val type: MemoryType)
+
+private val MEMORY_TYPE_OPTIONS: List<MemoryTypeOption> = listOf(
+    MemoryTypeOption("Fix", MemoryType.FIX),
+    MemoryTypeOption("Person", MemoryType.PERSON),
+    MemoryTypeOption("Idea", MemoryType.IDEA),
+    MemoryTypeOption("Place", MemoryType.PLACE),
+    MemoryTypeOption("Recipe", MemoryType.RECIPE),
+    MemoryTypeOption("Note", MemoryType.NOTE),
+    MemoryTypeOption("Other", MemoryType.OTHER),
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MindDropdown(
     label: String,
@@ -306,25 +328,67 @@ fun MindDropdown(
     leadingIcon: ImageVector? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    Box(modifier) {
+    val shape = RoundedCornerShape(16.dp)
+    val colors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = Color.Transparent,
+        disabledBorderColor = Color.Transparent,
+    )
+
+    // The anchored dropdown box makes the entire field tappable and positions
+    // the menu against the field; the inner text field must NOT be focusable so
+    // taps toggle the menu instead of being captured by the field itself.
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier.fillMaxWidth(),
+    ) {
         OutlinedTextField(
             value = selected,
             onValueChange = {},
             readOnly = true,
+            singleLine = true,
             label = { Text(label) },
             leadingIcon = leadingIcon?.let { { Icon(it, contentDescription = null) } },
-            trailingIcon = { Icon(Icons.Rounded.ArrowDropDown, contentDescription = null) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            shape = shape,
+            colors = colors,
             modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true },
-            shape = RoundedCornerShape(16.dp),
-            singleLine = true,
+                .menuAnchor(
+                    ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                    enabled = true,
+                )
+                .fillMaxWidth(),
         )
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ) {
             options.forEach { option ->
+                val isSelected = option == selected
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = {
+                        Text(
+                            option,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
+                        )
+                    },
+                    // Selected state is shown via a leading check; the transparent
+                    // counterpart keeps every option's text aligned on one line.
+                    leadingIcon = {
+                        Icon(
+                            Icons.Rounded.Check,
+                            contentDescription = null,
+                            tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        )
+                    },
                     onClick = {
                         onSelect(option)
                         expanded = false
@@ -334,6 +398,15 @@ fun MindDropdown(
         }
     }
 }
+
+/** The fixed set of memory type options shown by the Memory Type selector. */
+val MEMORY_TYPE_LABELS: List<String> = MEMORY_TYPE_OPTIONS.map { it.label }
+
+fun memoryTypeToLabel(type: MemoryType): String =
+    MEMORY_TYPE_OPTIONS.firstOrNull { it.type == type }?.label ?: MEMORY_TYPE_OPTIONS.last().label
+
+fun labelToMemoryType(label: String): MemoryType =
+    MEMORY_TYPE_OPTIONS.firstOrNull { it.label == label }?.type ?: MemoryType.OTHER
 
 // ---------------------------------------------------------------------------
 // Buttons — pill (fully rounded), filled / tonal / outlined.

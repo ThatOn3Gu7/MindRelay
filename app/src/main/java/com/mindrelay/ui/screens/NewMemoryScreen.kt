@@ -50,12 +50,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mindrelay.data.model.MemoryType
 import com.mindrelay.nav.MindNavController
 import com.mindrelay.nav.MindRoute
 import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
+import com.mindrelay.ui.components.MEMORY_TYPE_LABELS
+import com.mindrelay.ui.components.labelToMemoryType
+import com.mindrelay.ui.components.memoryTypeToLabel
 import com.mindrelay.ui.components.MindDropdown
 import com.mindrelay.ui.components.MindTextField
 import com.mindrelay.ui.components.PillButton
@@ -63,28 +65,6 @@ import com.mindrelay.ui.components.PillChip
 import com.mindrelay.ui.components.SectionLabel
 import com.mindrelay.util.epochDayToLocalDate
 import com.mindrelay.util.nowEpochDay
-
-private val TYPE_OPTIONS = listOf("Fix", "Person", "Idea", "Place", "Recipe", "Note", "Other")
-
-private fun optionToType(option: String): MemoryType = when (option) {
-    "Fix" -> MemoryType.FIX
-    "Person" -> MemoryType.PERSON
-    "Idea" -> MemoryType.IDEA
-    "Place" -> MemoryType.PLACE
-    "Recipe" -> MemoryType.RECIPE
-    "Note" -> MemoryType.NOTE
-    else -> MemoryType.OTHER
-}
-
-private fun typeToOption(type: MemoryType): String = when (type) {
-    MemoryType.FIX -> "Fix"
-    MemoryType.PERSON -> "Person"
-    MemoryType.IDEA -> "Idea"
-    MemoryType.PLACE -> "Place"
-    MemoryType.RECIPE -> "Recipe"
-    MemoryType.NOTE -> "Note"
-    else -> "Other"
-}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -111,7 +91,7 @@ fun NewMemoryScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long? = 
     LaunchedEffect(existing) {
         val m = existing ?: return@LaunchedEffect
         title = m.title
-        type = typeToOption(m.type)
+        type = memoryTypeToLabel(m.type)
         content = m.content
         tags = m.tags.trim().split(" ").filter { it.startsWith("#") }.joinToString(" ") { it.removePrefix("#") }
         linkedProjectId = m.projectId
@@ -207,7 +187,7 @@ fun NewMemoryScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long? = 
 
                         MindDropdown(
                             label = "Type",
-                            options = TYPE_OPTIONS,
+                            options = MEMORY_TYPE_LABELS,
                             selected = type,
                             onSelect = { type = it },
                             leadingIcon = Icons.Rounded.Category,
@@ -318,7 +298,7 @@ fun NewMemoryScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long? = 
                                     original.copy(
                                         title = title.trim(),
                                         content = content.trim(),
-                                        type = optionToType(type),
+                                        type = labelToMemoryType(type),
                                         tags = tags,
                                         projectId = linkedProjectId,
                                         revisitAt = revisitMillis,
@@ -329,7 +309,7 @@ fun NewMemoryScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long? = 
                                 targetId = repo.saveMemory(
                                     title = title,
                                     content = content,
-                                    type = optionToType(type),
+                                    type = labelToMemoryType(type),
                                     tags = tags,
                                     projectId = linkedProjectId,
                                     revisitAt = revisitMillis,

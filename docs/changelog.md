@@ -28,6 +28,13 @@ change, newest first within a category.
 
 ### Fixed
 
+- New/Edit Memory Type selector is now reliably tappable: `MindDropdown` was
+  rewritten to the canonical Material 3 `ExposedDropdownMenuBox` + `menuAnchor`
+  pattern (the whole field opens the menu, instead of a stacked `clickable` on
+  the text field that could miss taps). Options are unchanged (Fix, Person,
+  Idea, Place, Recipe, Note, Other), the selected option is highlighted, and
+  editing preloads and persists the saved type via shared label/type mappings.
+
 - The sample backup no longer shows mismatched "next action" rows after restore:
   each project's `nextAction` (and its active session's `currentNextAction`)
   now matches that project's youngest open task — e.g. "Compose Practise App"
