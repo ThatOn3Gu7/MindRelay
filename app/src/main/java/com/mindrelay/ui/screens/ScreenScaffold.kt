@@ -1,5 +1,6 @@
 package com.mindrelay.ui.screens
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +34,11 @@ import com.mindrelay.nav.MindNavController
 /**
  * Shared top app bar: 64dp on surface, drawn behind the status bar (top inset
  * applied by the bar itself), title in titleLarge, 48dp icon buttons.
+ *
+ * @param overflowMenu optional lambda rendered at the end of the actions row.
+ *   Callers pass [MindOverflowMenu], which renders the three-dot button and its
+ *   menu(s) inside one anchored [Box], so the popup opens beside/below the
+ *   button instead of inheriting the full screen as its anchor.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -42,6 +49,7 @@ fun MindTopBar(
     onClose: (() -> Unit)? = null,
     actions: List<Pair<ImageVector, () -> Unit>> = emptyList(),
     modifier: Modifier = Modifier,
+    overflowMenu: (@Composable () -> Unit)? = null,
 ) {
     TopAppBar(
         title = { Text(title, style = MaterialTheme.typography.titleLarge) },
@@ -61,6 +69,7 @@ fun MindTopBar(
                     Icon(icon, contentDescription = null)
                 }
             }
+            if (overflowMenu != null) overflowMenu()
         },
         modifier = modifier,
         windowInsets = WindowInsets.statusBars,
@@ -71,6 +80,28 @@ fun MindTopBar(
             titleContentColor = MaterialTheme.colorScheme.onSurface,
         ),
     )
+}
+
+/**
+ * Overflow control anchored to a three-dot ("MoreVert") button. Renders the
+ * button and whatever the caller places in [menuContent] inside a single
+ * Box, so the DropdownMenus in [menuContent] anchor their popups to that box —
+ * beside/below the button — rather than to the surrounding screen.
+ *
+ * Supports more than one DropdownMenu in [menuContent] (e.g. a secondary
+ * "Change status" menu on Project Detail); each anchors to the same button.
+ */
+@Composable
+fun MindOverflowMenu(
+    onOpen: () -> Unit,
+    menuContent: @Composable () -> Unit,
+) {
+    Box {
+        IconButton(onClick = onOpen, modifier = Modifier.padding(end = 4.dp)) {
+            Icon(Icons.Rounded.MoreVert, contentDescription = "More options")
+        }
+        menuContent()
+    }
 }
 
 /**

@@ -28,6 +28,15 @@ change, newest first within a category.
 
 ### Fixed
 
+- Three-dot (MoreVert) overflow menus now open beside their button instead of
+  in a corner of the screen. The menus on Capture Detail, Memory Detail,
+  Project Detail (including its "Change status" sub-menu) and Session were
+  re-anchored: `MindTopBar` gained an `overflowMenu` slot and a shared
+  `MindOverflowMenu` renders the MoreVert button and its menu(s) inside one
+  anchored box, so the popup positions itself against the button across screen
+  sizes. All menu items, behaviors, nested menus and outside-tap dismissal are
+  unchanged.
+
 - New/Edit Memory Type selector is now reliably tappable: `MindDropdown` was
   rewritten to the canonical Material 3 `ExposedDropdownMenuBox` + `menuAnchor`
   pattern (the whole field opens the menu, instead of a stacked `clickable` on

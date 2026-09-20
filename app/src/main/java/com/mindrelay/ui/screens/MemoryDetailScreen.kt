@@ -32,7 +32,6 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.EventRepeat
 import androidx.compose.material.icons.rounded.FolderOpen
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -188,37 +187,43 @@ fun MemoryDetailScreen(vm: AppViewModel, nav: MindNavController, memoryId: Long?
             onBack = { nav.popToRoot() },
             actions = listOf(
                 Icons.Rounded.Edit to { nav.navigate(MindScreen.NEW_MEMORY, MindTransition.SLIDE_UP, memory.id.toString()) },
-                Icons.Rounded.MoreVert to { menuOpen = true },
             ),
+            overflowMenu = {
+                MindOverflowMenu(
+                    onOpen = { menuOpen = true },
+                    menuContent = {
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(
+                                text = { Text("Archive", color = MaterialTheme.colorScheme.onSurface) },
+                                onClick = {
+                                    menuOpen = false
+                                    vm.launchAndRun(
+                                        block = {
+                                            repo.archiveMemory(memory.id)
+                                            null
+                                        },
+                                        andThen = { nav.resetTo(listOf(MindRoute(MindScreen.MEMORIES)), MindTransition.SLIDE_DOWN) },
+                                    )
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete memory", color = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    menuOpen = false
+                                    vm.launchAndRun(
+                                        block = {
+                                            repo.deleteMemory(memory.id)
+                                            null
+                                        },
+                                        andThen = { nav.resetTo(listOf(MindRoute(MindScreen.MEMORIES)), MindTransition.SLIDE_DOWN) },
+                                    )
+                                },
+                            )
+                        }
+                    },
+                )
+            },
         )
-        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-            DropdownMenuItem(
-                text = { Text("Archive", color = MaterialTheme.colorScheme.onSurface) },
-                onClick = {
-                    menuOpen = false
-                    vm.launchAndRun(
-                        block = {
-                            repo.archiveMemory(memory.id)
-                            null
-                        },
-                        andThen = { nav.resetTo(listOf(MindRoute(MindScreen.MEMORIES)), MindTransition.SLIDE_DOWN) },
-                    )
-                },
-            )
-            DropdownMenuItem(
-                text = { Text("Delete memory", color = MaterialTheme.colorScheme.error) },
-                onClick = {
-                    menuOpen = false
-                    vm.launchAndRun(
-                        block = {
-                            repo.deleteMemory(memory.id)
-                            null
-                        },
-                        andThen = { nav.resetTo(listOf(MindRoute(MindScreen.MEMORIES)), MindTransition.SLIDE_DOWN) },
-                    )
-                },
-            )
-        }
 
         AnimatedVisibility(
             visible = isVisible,

@@ -25,7 +25,6 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.EmojiObjects
 import androidx.compose.material.icons.rounded.Flag
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Notes
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.ShoppingCart
@@ -288,23 +287,29 @@ fun SessionScreen(vm: AppViewModel, nav: MindNavController, sessionId: Long?) {
             MindTopBar(
                 title = session.title.substringBefore("·").trim(),
                 onBack = { nav.pop() },
-                actions = listOf(Icons.Rounded.MoreVert to { menuOpen = true }),
+                overflowMenu = {
+                    MindOverflowMenu(
+                        onOpen = { menuOpen = true },
+                        menuContent = {
+                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                DropdownMenuItem(
+                                    text = { Text("Delete session", color = MaterialTheme.colorScheme.error) },
+                                    onClick = {
+                                        menuOpen = false
+                                        vm.launchAndRun(
+                                            block = {
+                                                repo.deleteSession(session.id)
+                                                null
+                                            },
+                                            andThen = { nav.pop() },
+                                        )
+                                    },
+                                )
+                            }
+                        },
+                    )
+                },
             )
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                DropdownMenuItem(
-                    text = { Text("Delete session", color = MaterialTheme.colorScheme.error) },
-                    onClick = {
-                        menuOpen = false
-                        vm.launchAndRun(
-                            block = {
-                                repo.deleteSession(session.id)
-                                null
-                            },
-                            andThen = { nav.pop() },
-                        )
-                    },
-                )
-            }
 
             AnimatedVisibility(
                 visible = isVisible,
