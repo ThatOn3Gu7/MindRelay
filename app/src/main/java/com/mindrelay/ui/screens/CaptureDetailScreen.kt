@@ -34,7 +34,6 @@ import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Help
 import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Notes
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.DropdownMenu
@@ -222,26 +221,30 @@ fun CaptureDetailScreen(vm: AppViewModel, nav: MindNavController, captureId: Lon
         MindTopBar(
             title = "Capture",
             onBack = { nav.popToRoot() },
-            actions = listOf(
-                Icons.Rounded.MoreVert to { menuOpen = true },
-            ),
+            overflowMenu = {
+                MindOverflowMenu(
+                    onOpen = { menuOpen = true },
+                    menuContent = {
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(
+                                text = { Text("Delete capture") },
+                                leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    vm.launchAndRun(
+                                        block = {
+                                            repo.deleteCapture(capture)
+                                            null
+                                        },
+                                        andThen = { nav.resetTo(listOf(MindRoute(MindScreen.INBOX)), MindTransition.SLIDE_DOWN) },
+                                    )
+                                },
+                            )
+                        }
+                    },
+                )
+            },
         )
-        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-            DropdownMenuItem(
-                text = { Text("Delete capture") },
-                leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null) },
-                onClick = {
-                    menuOpen = false
-                    vm.launchAndRun(
-                        block = {
-                            repo.deleteCapture(capture)
-                            null
-                        },
-                        andThen = { nav.resetTo(listOf(MindRoute(MindScreen.INBOX)), MindTransition.SLIDE_DOWN) },
-                    )
-                },
-            )
-        }
         
         AnimatedVisibility(
             visible = isVisible,

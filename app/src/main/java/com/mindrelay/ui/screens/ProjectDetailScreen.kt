@@ -33,7 +33,6 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
@@ -238,41 +237,47 @@ fun ProjectDetailScreen(vm: AppViewModel, nav: MindNavController, projectId: Lon
         MindTopBar(
             title = project.name,
             onBack = { nav.popToRoot() },
-            actions = listOf(Icons.Rounded.MoreVert to { menuOpen = true }),
+            overflowMenu = {
+                MindOverflowMenu(
+                    onOpen = { menuOpen = true },
+                    menuContent = {
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(text = { Text("Change status") }, onClick = { menuOpen = false; statusMenu = true })
+                            DropdownMenuItem(
+                                text = { Text("Edit project") },
+                                leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    nav.navigate(MindScreen.NEW_PROJECT, MindTransition.SLIDE_UP, project.id.toString())
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete project", color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    menuOpen = false
+                                    vm.launchAndRun(
+                                        block = {
+                                            repo.deleteProject(project.id)
+                                            null
+                                        },
+                                        andThen = { nav.resetTo(listOf(MindRoute(MindScreen.PROJECTS)), MindTransition.SLIDE_DOWN) },
+                                    )
+                                },
+                            )
+                        }
+                        DropdownMenu(expanded = statusMenu, onDismissRequest = { statusMenu = false }) {
+                            ProjectStatus.entries.forEach { st ->
+                                DropdownMenuItem(text = { Text(statusLabel(st)) }, onClick = {
+                                    statusMenu = false
+                                    vm.launch { repo.setProjectStatus(project.id, st) }
+                                })
+                            }
+                        }
+                    },
+                )
+            },
         )
-        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-            DropdownMenuItem(text = { Text("Change status") }, onClick = { menuOpen = false; statusMenu = true })
-            DropdownMenuItem(
-                text = { Text("Edit project") },
-                leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null) },
-                onClick = {
-                    menuOpen = false
-                    nav.navigate(MindScreen.NEW_PROJECT, MindTransition.SLIDE_UP, project.id.toString())
-                },
-            )
-            DropdownMenuItem(
-                text = { Text("Delete project", color = MaterialTheme.colorScheme.error) },
-                leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                onClick = {
-                    menuOpen = false
-                    vm.launchAndRun(
-                        block = {
-                            repo.deleteProject(project.id)
-                            null
-                        },
-                        andThen = { nav.resetTo(listOf(MindRoute(MindScreen.PROJECTS)), MindTransition.SLIDE_DOWN) },
-                    )
-                },
-            )
-        }
-        DropdownMenu(expanded = statusMenu, onDismissRequest = { statusMenu = false }) {
-            ProjectStatus.entries.forEach { st ->
-                DropdownMenuItem(text = { Text(statusLabel(st)) }, onClick = {
-                    statusMenu = false
-                    vm.launch { repo.setProjectStatus(project.id, st) }
-                })
-            }
-        }
 
         AnimatedVisibility(
             visible = isVisible,
