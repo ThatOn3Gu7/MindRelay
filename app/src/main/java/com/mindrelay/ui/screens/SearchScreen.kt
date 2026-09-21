@@ -271,11 +271,6 @@ private fun ExpressiveSearchItem(
                 }
             }
 
-            if (rows.isEmpty()) {
-                RootEmptyState {
-                    EmptySearchArt(query = q)
-                }
-            }
         }
     }
 }
@@ -500,6 +495,12 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
                             }
                         }
                     }
+                }
+            }
+
+            if (rows.isEmpty()) {
+                RootEmptyState {
+                    EmptySearchArt(query = q)
                 }
             }
         }
