@@ -13,6 +13,13 @@ change, newest first within a category.
   expressive entry cards with per-kind icon colors, a hero "current next
   action" card, and a pinned end-session action bar.
 
+- Reworked the Settings Theme control from a detached dropdown into an
+  expandable tile: tapping the Theme row grows the tile in place to reveal the
+  three choices (System, Light, Dark) with `BrightnessAuto`/`LightMode`/
+  `DarkMode` icons, the current setting stays highlighted, a rotating chevron
+  and spring-based expand/collapse match the app's motion, and tapping outside
+  collapses it.
+
 - Committed a stable debug signing key (`keystore/mindrelay-debug.p12`) so every
   debug APK — local or CI — shares one signature, and CI builds install straight
   over older builds instead of requiring an uninstall/reinstall.
