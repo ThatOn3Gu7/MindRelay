@@ -56,7 +56,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -105,62 +104,18 @@ private fun kindIcon(c: CaptureEntity): ImageVector = kindIcon(c.kind)
 @Composable
 private fun EmptySearchArt(query: String) {
     val isSearch = query.isNotBlank()
-    
-    val icon = if (isSearch) Icons.Rounded.Search else Icons.Rounded.Tune
-    val headline = if (isSearch) "No matches found" else "Search your mind"
-    val body = if (isSearch)
-        "We couldn't find anything matching \"$query\". Try searching for different keywords or changing filters."
-    else
-        "Quickly search across projects, session notes, tasks, durable memories, and captured thoughts."
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp, horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(140.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(40.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                modifier = Modifier.size(120.dp)
-            ) {}
-            Surface(
-                shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier.size(80.dp)
-            ) {}
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Text(
-            text = headline,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
-        )
-    }
+    RootEmptyArt(
+        icon = if (isSearch) Icons.Rounded.Search else Icons.Rounded.Tune,
+        headline = if (isSearch) "No matches found" else "Search your mind",
+        body = if (isSearch)
+            "We couldn't find anything matching \"$query\". Try searching for different " +
+                "keywords or changing filters."
+        else
+            "Quickly search across projects, session notes, tasks, durable memories, and " +
+                "captured thoughts.",
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        onContainerColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    )
 }
 
 @Composable
@@ -498,10 +453,11 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
                 }
             }
 
-            if (rows.isEmpty()) {
-                RootEmptyState {
-                    EmptySearchArt(query = q)
-                }
+        }
+
+        if (rows.isEmpty()) {
+            RootEmptyState(stateKey = if (q.isNotBlank()) "search" else "prompt") {
+                EmptySearchArt(query = q)
             }
         }
     }

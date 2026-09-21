@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -47,7 +46,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -73,68 +71,23 @@ private fun EmptyProjectsArt(filter: String) {
         "Done" -> Icons.Rounded.CheckCircle
         else -> Icons.Rounded.FolderOpen
     }
-    
     val headline = when (filter) {
         "Paused" -> "Nothing on hold"
         "Done" -> "No finished projects yet"
         else -> "Ready for a new venture"
     }
-    
     val body = when (filter) {
         "Paused" -> "Projects that need a break will safely wait for you here."
         "Done" -> "Your completed missions and accomplishments will be logged here."
         else -> "Create an active project to track sessions, state, and next actions."
     }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp, horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Expressive ambient icon container
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(140.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(40.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                modifier = Modifier.size(120.dp)
-            ) {}
-            Surface(
-                shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier.size(80.dp)
-            ) {}
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Text(
-            text = headline,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
-        )
-    }
+    RootEmptyArt(
+        icon = icon,
+        headline = headline,
+        body = body,
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        onContainerColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    )
 }
 
 @Composable
@@ -351,10 +304,11 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
                 }
             }
 
-            if (filtered.isEmpty()) {
-                RootEmptyState {
-                    EmptyProjectsArt(filter)
-                }
+        }
+
+        if (filtered.isEmpty()) {
+            RootEmptyState(stateKey = filter) {
+                EmptyProjectsArt(filter)
             }
         }
     }

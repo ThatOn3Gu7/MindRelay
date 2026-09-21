@@ -35,7 +35,18 @@ change, newest first within a category.
 
 ### Changed
 
-- Reworked the empty-state layout so Inbox, Projects, Memories, and Search share one fixed top-aligned artwork position; switching tabs now changes only the artwork and copy, not the empty-state placement.
+- The empty state now sits in the same spot on every root tab. Inbox, Projects,
+  Memories and Search all host it as an overlay at one shared offset
+  (`RootEmptyStateTop`, 144dp under the top bar — chosen to clear the tallest
+  header band, the Memories/Search search field + filter chips), and the artwork
+  is a single shared `RootEmptyArt`, so no screen can drift back to its own
+  padding or icon size. Switching tabs now reads as the icon swapping in place
+  rather than the block being redrawn somewhere else, and changing a filter chip
+  while a tab is empty crossfades and scales the artwork instead of popping.
+
+- Empty sections inside detail screens (Project detail's "Recent sessions" and
+  "Linked memories", Session's log) now render through one shared
+  `SectionEmptyPlaceholder` card, so all three read identically.
 
 - Removed the decorative Inbox and Search icons from their root tab top bars and let both titles use the same leading position as the other root-level screens, so switching tabs no longer makes the title appear to move.
 

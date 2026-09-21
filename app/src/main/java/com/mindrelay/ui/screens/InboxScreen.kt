@@ -41,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -71,58 +70,14 @@ private fun kindLabel(kind: CaptureKind): String = when (kind) {
 
 @Composable
 private fun EmptyInboxArt() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp, horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Custom composed art piece using standard material shapes and icons
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(140.dp)
-        ) {
-            // Background ambient ring
-            Surface(
-                shape = RoundedCornerShape(40.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.size(120.dp)
-            ) {}
-            // Inner vibrant ring
-            Surface(
-                shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(80.dp)
-            ) {}
-            // Centered icon
-            Icon(
-                imageVector = Icons.Rounded.Lightbulb,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Text(
-            text = "Your mind is clear",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Text(
-            text = "Nothing here right now. Capture a new thought, idea, or task and it will safely land here for sorting.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
-        )
-    }
+    RootEmptyArt(
+        icon = Icons.Rounded.Lightbulb,
+        headline = "Your mind is clear",
+        body = "Nothing here right now. Capture a new thought, idea, or task and it will " +
+            "safely land here for sorting.",
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        onContainerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    )
 }
 
 @Composable
@@ -267,7 +222,7 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
         }
 
         if (filtered.isEmpty()) {
-            RootEmptyState {
+            RootEmptyState(stateKey = "inbox") {
                 EmptyInboxArt()
             }
         }

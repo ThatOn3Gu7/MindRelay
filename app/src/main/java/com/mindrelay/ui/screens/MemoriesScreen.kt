@@ -53,7 +53,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -87,7 +86,7 @@ private fun typeLabel(type: MemoryType): String = when (type) {
 @Composable
 private fun EmptyMemoriesArt(filter: String, query: String) {
     val isSearch = query.isNotBlank()
-    
+
     val icon = when {
         isSearch -> Icons.Rounded.Search
         filter == "Fixes" -> Icons.Rounded.Build
@@ -96,68 +95,23 @@ private fun EmptyMemoriesArt(filter: String, query: String) {
         filter == "Places" -> Icons.Rounded.Place
         else -> Icons.Rounded.AutoAwesome
     }
-    
     val headline = when {
         isSearch -> "No matches found"
         filter == "All" -> "A blank canvas"
         else -> "No $filter saved yet"
     }
-    
     val body = when {
         isSearch -> "We couldn't find any memories matching \"$query\"."
         filter == "All" -> "Preserve durable knowledge, important ideas, and facts here. Tag them and set revisit dates so they surface exactly when you need them."
         else -> "Capture new $filter and they will securely live in this space."
     }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp, horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Expressive ambient icon container
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(140.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(40.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                modifier = Modifier.size(120.dp)
-            ) {}
-            Surface(
-                shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.tertiaryContainer,
-                modifier = Modifier.size(80.dp)
-            ) {}
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Text(
-            text = headline,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
-        )
-    }
+    RootEmptyArt(
+        icon = icon,
+        headline = headline,
+        body = body,
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        onContainerColor = MaterialTheme.colorScheme.onTertiaryContainer,
+    )
 }
 
 @Composable
@@ -343,10 +297,11 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
                 }
             }
 
-            if (filtered.isEmpty()) {
-                RootEmptyState {
-                    EmptyMemoriesArt(filter = filter, query = query)
-                }
+        }
+
+        if (filtered.isEmpty()) {
+            RootEmptyState(stateKey = if (query.isNotBlank()) "search" else filter) {
+                EmptyMemoriesArt(filter = filter, query = query)
             }
         }
     }
