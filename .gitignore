@@ -11,3 +11,6 @@
 local.properties
 *.apk
 *.aab
+/debug/gh-latest-debug-apk.sh
+/debug/install-latest-debug.sh
+/diff.md
