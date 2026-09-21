@@ -9,10 +9,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.onClickOutside
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -247,9 +245,9 @@ private val THEME_OPTIONS = listOf(
 /**
  * Expandable Theme selector. Replaces the old Theme Tile + detached
  * DropdownMenu: the header row toggles [expanded] and the three choices drop
- * in-line inside the same rounded card; tapping outside the card collapses it.
+ * in-line inside the same rounded card; the Settings screen layers a scrim
+ * behind it so tapping outside the card collapses it.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ThemeControl(
     current: String,
@@ -277,7 +275,6 @@ private fun ThemeControl(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = modifier
             .fillMaxWidth()
-            .onClickOutside(enabled = expanded) { onExpandChange(false) }
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -482,6 +479,21 @@ fun SettingsScreen(vm: AppViewModel, nav: MindNavController) {
     // -------------------------------------------------------------------------
 
     Box(Modifier.fillMaxSize()) {
+        // Transparent scrim behind the content: while the Theme selector is
+        // expanded, any tap that doesn't land on a control collapses it. The
+        // content is composed after (drawn above) the scrim, so the selector
+        // itself and every other control stay fully interactive.
+        if (themeExpanded) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { themeExpanded = false },
+            )
+        }
+
         Column(Modifier.fillMaxSize()) {
             MindTopBar(
                 title = "Settings",
