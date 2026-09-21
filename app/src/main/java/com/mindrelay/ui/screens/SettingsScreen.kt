@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BrightnessAuto
-import androidx.compose.material.icons.rounded.Brush
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DarkMode
@@ -542,15 +541,6 @@ fun SettingsScreen(vm: AppViewModel, nav: MindNavController) {
                             onExpandChange = { expanded ->
                                 themeExpanded = expanded
                             },
-                        )
-
-                        ExpressiveSettingsTile(
-                            headline = "Expressive style",
-                            supporting = "Rounded · Roboto Flex",
-                            icon = Icons.Rounded.Brush,
-                            onClick = null,
-                            iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            iconContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                         )
                     }
 
