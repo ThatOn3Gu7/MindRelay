@@ -223,7 +223,6 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
         topBar = {
             MindTopBar(
                 title = "Inbox",
-                preserveLeadingSpace = true,
             )
         },
         fab = { QuickCaptureFab(nav) },
