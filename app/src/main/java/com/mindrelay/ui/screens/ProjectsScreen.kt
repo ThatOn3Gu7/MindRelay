@@ -316,7 +316,9 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
                 },
                 label = "projects_tab_transition",
                 modifier = Modifier.weight(1f)
-            ) { currentFilter ->
+            ) {
+                // The filtered list already reflects the selected filter, so the
+                // target-state parameter is deliberately not declared.
                 if (filtered.isEmpty()) {
                     Spacer(modifier = Modifier.fillMaxSize())
                 } else {

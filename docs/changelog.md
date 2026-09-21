@@ -54,6 +54,12 @@ change, newest first within a category.
 
 ### Fixed
 
+- The CI build stopped at the lint step: the Memories and Projects tab lists
+  declared an `AnimatedContent` target-state parameter they never used
+  (`_` and `currentFilter`), which `UnusedContentLambdaTargetStateParameter`
+  reports as an error. Both lambdas now omit the parameter — the crossfade,
+  filter chips and lists are unchanged.
+
 - Three-dot (MoreVert) overflow menus now open beside their button instead of
   in a corner of the screen. The menus on Capture Detail, Memory Detail,
   Project Detail (including its "Change status" sub-menu) and Session were
