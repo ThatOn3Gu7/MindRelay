@@ -59,6 +59,9 @@ change, newest first within a category.
   (`_` and `currentFilter`), which `UnusedContentLambdaTargetStateParameter`
   reports as an error. Both lambdas now omit the parameter — the crossfade,
   filter chips and lists are unchanged.
+- CI now mirrors every lint finding from the full lint text report into
+  check-run annotations, so a failing run shows all of them (AGP prints only
+  the first failure to the console log).
 
 - Three-dot (MoreVert) overflow menus now open beside their button instead of
   in a corner of the screen. The menus on Capture Detail, Memory Detail,
