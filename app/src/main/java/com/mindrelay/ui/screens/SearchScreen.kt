@@ -270,6 +270,12 @@ private fun ExpressiveSearchItem(
                     )
                 }
             }
+
+            if (rows.isEmpty()) {
+                RootEmptyState {
+                    EmptySearchArt(query = q)
+                }
+            }
         }
     }
 }
@@ -401,7 +407,8 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
             )
         },
     ) { _ ->
-        Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
             // Search field & Horizontal chip bar pinned at top
             Column(
                 modifier = Modifier
@@ -457,9 +464,7 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
                 // is actually used by the transition.
                 key(targetFilter) {
                     if (rows.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            EmptySearchArt(query = q)
-                        }
+                        Spacer(modifier = Modifier.fillMaxSize())
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
