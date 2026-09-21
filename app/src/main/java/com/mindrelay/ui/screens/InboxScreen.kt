@@ -273,4 +273,4 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
         }
     }
 }
-
+}
