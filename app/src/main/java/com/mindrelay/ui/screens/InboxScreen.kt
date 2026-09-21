@@ -195,6 +195,12 @@ private fun ExpressiveInboxItem(
                 )
             }
         }
+
+        if (filtered.isEmpty()) {
+            RootEmptyState {
+                EmptyInboxArt()
+            }
+        }
     }
 }
 
@@ -227,7 +233,8 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
         },
         fab = { QuickCaptureFab(nav) },
     ) { _ ->
-        LazyColumn(
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
             modifier = Modifier.fillMaxSize(),
             // Kept padding tighter to address the sizing feedback
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp),
@@ -249,11 +256,7 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
                 }
             }
             
-            if (filtered.isEmpty()) {
-                item {
-                    EmptyInboxArt()
-                }
-            } else {
+            if (filtered.isNotEmpty()) {
                 items(filtered, key = { it.id }) { c ->
                     ExpressiveInboxItem(
                         headline = c.text,
