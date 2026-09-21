@@ -284,7 +284,14 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
         },
         fab = { QuickCaptureFab(nav) },
     ) { _ ->
-        Column(modifier = Modifier.fillMaxSize()) {
+        val filtered = when (filter) {
+            "Paused" -> projects.filter { it.status == ProjectStatus.PAUSED }
+            "Done" -> projects.filter { it.status == ProjectStatus.DONE }
+            else -> projects.filter { it.status == ProjectStatus.ACTIVE }
+        }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
             // Fixed Top Filter Row - keeps chips visible while scrolling
             Row(
                 modifier = Modifier
@@ -310,17 +317,8 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
                 label = "projects_tab_transition",
                 modifier = Modifier.weight(1f)
             ) { currentFilter ->
-                val filtered = when (currentFilter) {
-                    "Paused" -> projects.filter { it.status == ProjectStatus.PAUSED }
-                    "Done" -> projects.filter { it.status == ProjectStatus.DONE }
-                    else -> projects.filter { it.status == ProjectStatus.ACTIVE }
-                }
-
                 if (filtered.isEmpty()) {
-                    // Custom empty state inside the animated container
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        EmptyProjectsArt(currentFilter)
-                    }
+                    Spacer(modifier = Modifier.fillMaxSize())
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -343,6 +341,12 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
                             )
                         }
                     }
+                }
+            }
+
+            if (filtered.isEmpty()) {
+                RootEmptyState {
+                    EmptyProjectsArt(filter)
                 }
             }
         }
