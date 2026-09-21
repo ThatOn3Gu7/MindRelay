@@ -94,17 +94,13 @@ fun MindTopBar(
 
 /**
  * Shared empty-state slot for root tabs. The artwork composables carry their
- * own 48dp top padding, so this 128dp offset places the artwork itself at the
- * same vertical position on every root tab regardless of header controls.
+ * own 48dp top padding, so the shared host starts at the same top position on
+ * every root tab.
  */
-private val RootEmptyStateTopOffset = 128.dp
-
 @Composable
 fun RootEmptyState(content: @Composable () -> Unit) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = RootEmptyStateTopOffset),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
     ) {
         content()
