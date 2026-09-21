@@ -35,6 +35,15 @@ change, newest first within a category.
 
 ### Changed
 
+- Search is no longer a separate tab. Every tab now carries the same search
+  field: Inbox, Projects and Memories search their own entries, and Home runs a
+  universal search across projects, session entries, tasks, memories and
+  captures, grouped into sections. Tapping a field focuses it and expands it
+  into a full-area search view that covers the list; the back arrow (or system
+  back, or the keyboard's done key) collapses it back into the field, playing
+  the same animation in reverse. Filter chips live inside the expanded view, and
+  the bottom navigation bar is down to four destinations.
+
 - The empty state now sits in the same spot on every root tab. Inbox, Projects,
   Memories and Search all host it as an overlay at one shared offset
   (`RootEmptyStateTop`, 144dp under the top bar — chosen to clear the tallest

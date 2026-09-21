@@ -32,8 +32,11 @@ following the device's system setting.
 - **Memories** — durable knowledge with tags, a type, a linked project/source
   session, and optional revisit dates. Only memories that are actually due
   resurface on Home; future revisits stay hidden until their date.
-- **Search** — global search across projects, session entries, tasks, memories
-  and captures, grouped by source type.
+- **Search** — every tab carries its own search field. Inbox, Projects and
+  Memories search their own entries; Home searches everything at once (projects,
+  session entries, tasks, memories and captures), grouped by source type.
+  Tapping a field focuses and expands it into a full-area search view, and the
+  back arrow collapses it again. There is no separate Search tab.
 - **Settings & Data/Backup** — appearance, capture defaults, reminders, plus
   export/import/restore of everything in a `.json` file. No account, no cloud,
   no silent upload: everything lives in a local Room/SQLite database owned by you.

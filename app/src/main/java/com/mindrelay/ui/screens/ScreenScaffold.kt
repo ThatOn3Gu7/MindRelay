@@ -109,13 +109,13 @@ fun MindTopBar(
 
 /**
  * The one top offset for every root empty state, measured from the top of the
- * tab content area (just under the top bar). It clears the tallest header band —
- * Memories and Search pin a search field plus filter chips
- * (8 + 56 + 16 + 32 + 8 ≈ 120dp) — so the artwork lands at exactly the same y on
- * every tab and never covers a header. Change this one number to move all four
- * together.
+ * tab content area (just under the top bar).
+ *
+ * Every tab now pins the same search field, so the collapsed header band is the
+ * same height everywhere (8 + 56 + 8 = 72dp) and this only has to clear that,
+ * leaving a 24dp gap. Change this one number to move all of them together.
  */
-private val RootEmptyStateTop = 144.dp
+private val RootEmptyStateTop = 96.dp
 
 /**
  * Shared empty-state slot for the root tabs.

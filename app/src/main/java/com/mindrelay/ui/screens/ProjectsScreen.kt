@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,7 +30,6 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +56,9 @@ import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.components.ConnectedChipGroup
+import com.mindrelay.ui.search.MindSearchField
+import com.mindrelay.ui.search.MindSearchResults
+import com.mindrelay.ui.search.rememberMindSearchState
 import com.mindrelay.util.workedAgo
 
 private fun statusLabel(s: ProjectStatus) = when (s) {
@@ -224,6 +227,7 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
     }
     
     var filter by remember { mutableStateOf("Active") }
+    val search = rememberMindSearchState()
 
     TabScaffold(
         nav = nav,
@@ -231,86 +235,114 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
         topBar = {
             MindTopBar(
                 title = "Projects",
-                actions = listOf(
-                    Icons.Rounded.Search to { nav.navigate(MindScreen.SEARCH, MindTransition.SLIDE_RIGHT) },
-                ),
             )
         },
         fab = { QuickCaptureFab(nav) },
     ) { _ ->
-        val filtered = when (filter) {
-            "Paused" -> projects.filter { it.status == ProjectStatus.PAUSED }
-            "Done" -> projects.filter { it.status == ProjectStatus.DONE }
-            else -> projects.filter { it.status == ProjectStatus.ACTIVE }
+        val q = search.query.trim()
+        val filtered = projects
+            .filter { p ->
+                when (filter) {
+                    "Paused" -> p.status == ProjectStatus.PAUSED
+                    "Done" -> p.status == ProjectStatus.DONE
+                    else -> p.status == ProjectStatus.ACTIVE
+                }
+            }
+            .filter { p ->
+                q.isEmpty() || "${p.name} ${p.currentState} ${p.nextAction}".contains(q, ignoreCase = true)
+            }
+
+        // The project list, shared by the collapsed screen and the expanded search.
+        val projectRows: LazyListScope.() -> Unit = {
+            items(filtered, key = { it.id }) { p ->
+                val count = sessionCounts[p.id] ?: 0
+                ExpressiveProjectCard(
+                    headline = p.name,
+                    status = p.status,
+                    sessionCount = count,
+                    lastWorked = workedAgo(p.lastWorkedAt),
+                    currentState = p.currentState,
+                    nextAction = p.nextAction,
+                    onClick = {
+                        nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, p.id.toString())
+                    }
+                )
+            }
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
-            // Fixed Top Filter Row - keeps chips visible while scrolling
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ConnectedChipGroup(
-                    options = listOf("Active", "Paused", "Done"),
-                    selected = filter,
-                    onSelect = { filter = it },
+                MindSearchField(
+                    state = search,
+                    placeholder = "Search projects",
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
-            }
 
-            // Smooth animated content transition for the list below the chips
-            AnimatedContent(
-                targetState = filter,
-                transitionSpec = {
-                    (fadeIn(animationSpec = tween(250, delayMillis = 50)) +
-                        scaleIn(initialScale = 0.95f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f)))
-                        .togetherWith(fadeOut(animationSpec = tween(150)))
-                },
-                label = "projects_tab_transition",
-                modifier = Modifier.weight(1f)
-            ) { targetFilter ->
-                // Key the content on the target filter so each filter's list has
-                // its own identity for AnimatedContent, and the target-state
-                // parameter is actually used by the transition.
-                key(targetFilter) {
-                    // The filtered list already reflects the selected filter.
-                    if (filtered.isEmpty()) {
-                        Spacer(modifier = Modifier.fillMaxSize())
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            // Spacious padding for the modern, expressive feel
-                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                        ) {
-                            items(filtered, key = { it.id }) { p ->
-                                val count = sessionCounts[p.id] ?: 0
-                                ExpressiveProjectCard(
-                                    headline = p.name,
-                                    status = p.status,
-                                    sessionCount = count,
-                                    lastWorked = workedAgo(p.lastWorkedAt),
-                                    currentState = p.currentState,
-                                    nextAction = p.nextAction,
-                                    onClick = {
-                                        nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, p.id.toString())
-                                    }
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    // Smooth animated content transition for the list below the field
+                    AnimatedContent(
+                        targetState = filter,
+                        transitionSpec = {
+                            (fadeIn(animationSpec = tween(250, delayMillis = 50)) +
+                                scaleIn(initialScale = 0.95f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f)))
+                                .togetherWith(fadeOut(animationSpec = tween(150)))
+                        },
+                        label = "projects_tab_transition",
+                        modifier = Modifier.fillMaxSize()
+                    ) { targetFilter ->
+                        // Key the content on the target filter so each filter's list has
+                        // its own identity for AnimatedContent, and the target-state
+                        // parameter is actually used by the transition.
+                        key(targetFilter) {
+                            // The filtered list already reflects the selected filter.
+                            if (filtered.isEmpty()) {
+                                Spacer(modifier = Modifier.fillMaxSize())
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    // Spacious padding for the modern, expressive feel
+                                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                ) {
+                                    projectRows()
+                                }
+                            }
+                        }
+                    }
+
+                    // Expanded search covers the list instead of pushing it.
+                    MindSearchResults(expanded = search.expanded) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState())
+                                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                ConnectedChipGroup(
+                                    options = listOf("Active", "Paused", "Done"),
+                                    selected = filter,
+                                    onSelect = { filter = it },
                                 )
+                            }
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 120.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                            ) {
+                                projectRows()
                             }
                         }
                     }
                 }
             }
 
-        }
-
-        if (filtered.isEmpty()) {
-            RootEmptyState(stateKey = filter) {
-                EmptyProjectsArt(filter)
+            if (filtered.isEmpty() && !search.expanded) {
+                RootEmptyState(stateKey = filter) {
+                    EmptyProjectsArt(filter)
+                }
             }
         }
     }
-}
 }

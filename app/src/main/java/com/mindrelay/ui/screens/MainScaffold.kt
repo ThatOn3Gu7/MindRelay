@@ -10,7 +10,6 @@ import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Inbox
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
@@ -31,8 +30,11 @@ import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 
 /**
- * The 5-destination navigation bar used by Home, Inbox, Projects, Memories and
- * Search. 80dp tall on surfaceContainer, extended through the gesture inset.
+ * The 4-destination navigation bar used by Home, Inbox, Projects and Memories.
+ * 80dp tall on surfaceContainer, extended through the gesture inset.
+ *
+ * Search is no longer a destination: every tab carries its own search field
+ * (Home's is universal), so search opens in place instead of as a fifth tab.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -49,7 +51,6 @@ fun MindNavBar(
         NavDest(nav, MindScreen.INBOX, "Inbox", Icons.Rounded.Inbox, selected)
         NavDest(nav, MindScreen.PROJECTS, "Projects", Icons.Rounded.FolderOpen, selected)
         NavDest(nav, MindScreen.MEMORIES, "Memories", Icons.Rounded.Bookmark, selected)
-        NavDest(nav, MindScreen.SEARCH, "Search", Icons.Rounded.Search, selected)
     }
 }
 

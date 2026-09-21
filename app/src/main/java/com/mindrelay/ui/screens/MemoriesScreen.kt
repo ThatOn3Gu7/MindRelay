@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,8 +38,6 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,7 +48,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -63,6 +61,9 @@ import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.components.ConnectedChipGroup
+import com.mindrelay.ui.search.MindSearchField
+import com.mindrelay.ui.search.MindSearchResults
+import com.mindrelay.ui.search.rememberMindSearchState
 
 private fun typeIcon(type: MemoryType): ImageVector = when (type) {
     MemoryType.FIX -> Icons.Rounded.Build
@@ -193,8 +194,9 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
     val repo = vm.repository
     val memories by repo.memories.active().collectAsStateWithLifecycle(initialValue = emptyList())
     var filter by remember { mutableStateOf("All") }
-    var query by remember { mutableStateOf("") }
+    val search = rememberMindSearchState()
 
+    val q = search.query.trim()
     val filtered = memories
         .filter { m ->
             when (filter) {
@@ -206,12 +208,25 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
             }
         }
         .filter { m ->
-            query.isBlank() ||
-                m.title.contains(query, ignoreCase = true) ||
-                m.content.contains(query, ignoreCase = true) ||
-                m.tags.contains(query, ignoreCase = true)
+            q.isEmpty() ||
+                m.title.contains(q, ignoreCase = true) ||
+                m.content.contains(q, ignoreCase = true) ||
+                m.tags.contains(q, ignoreCase = true)
         }
     // -------------------------------------------------------------------------
+
+    // The memory list, shared by the collapsed screen and the expanded search.
+    val memoryRows: LazyListScope.() -> Unit = {
+        items(filtered, key = { it.id }) { m ->
+            val tags = m.tags.split(" ").filter { it.startsWith("#") }.joinToString(" ")
+            ExpressiveMemoryItem(
+                headline = m.title,
+                supporting = "${typeLabel(m.type)}${if (tags.isNotBlank()) " · $tags" else ""}",
+                icon = typeIcon(m.type),
+                onClick = { nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, m.id.toString()) }
+            )
+        }
+    }
 
     TabScaffold(
         nav = nav,
@@ -221,89 +236,75 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
     ) { _ ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
-            // Pinned Top Section: Search Bar and Chips
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
-            ) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    placeholder = { Text("Search memories...") },
-                    leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
-                    ),
+                MindSearchField(
+                    state = search,
+                    placeholder = "Search memories",
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ConnectedChipGroup(
-                        options = listOf("All", "Fixes", "People", "Ideas", "Places"),
-                        selected = filter,
-                        onSelect = { filter = it }
-                    )
-                }
-            }
 
-            // Animated List Section below the pinned headers
-            AnimatedContent(
-                targetState = filter, // Animate crossfade only when filter changes for smoothness
-                transitionSpec = {
-                    (fadeIn(animationSpec = tween(250, delayMillis = 50)) +
-                        scaleIn(initialScale = 0.95f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f)))
-                        .togetherWith(fadeOut(animationSpec = tween(150)))
-                },
-                label = "memories_tab_transition",
-                modifier = Modifier.weight(1f)
-            ) { targetFilter ->
-                // Key the content on the target filter so each filter's list has
-                // its own identity for AnimatedContent, and the target-state
-                // parameter is actually used by the transition.
-                key(targetFilter) {
-                    // The filtered list already reflects the selected filter and query.
-                    if (filtered.isEmpty()) {
-                        Spacer(modifier = Modifier.fillMaxSize())
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            items(filtered, key = { it.id }) { m ->
-                                val tags = m.tags.split(" ").filter { it.startsWith("#") }.joinToString(" ")
-                                ExpressiveMemoryItem(
-                                    headline = m.title,
-                                    supporting = "${typeLabel(m.type)}${if (tags.isNotBlank()) " · $tags" else ""}",
-                                    icon = typeIcon(m.type),
-                                    onClick = { nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, m.id.toString()) }
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    AnimatedContent(
+                        targetState = filter, // Animate crossfade only when filter changes for smoothness
+                        transitionSpec = {
+                            (fadeIn(animationSpec = tween(250, delayMillis = 50)) +
+                                scaleIn(initialScale = 0.95f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f)))
+                                .togetherWith(fadeOut(animationSpec = tween(150)))
+                        },
+                        label = "memories_tab_transition",
+                        modifier = Modifier.fillMaxSize()
+                    ) { targetFilter ->
+                        // Key the content on the target filter so each filter's list has
+                        // its own identity for AnimatedContent, and the target-state
+                        // parameter is actually used by the transition.
+                        key(targetFilter) {
+                            // The filtered list already reflects the selected filter and query.
+                            if (filtered.isEmpty()) {
+                                Spacer(modifier = Modifier.fillMaxSize())
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    memoryRows()
+                                }
+                            }
+                        }
+                    }
+
+                    // Expanded search covers the list instead of pushing it.
+                    MindSearchResults(expanded = search.expanded) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState())
+                                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                ConnectedChipGroup(
+                                    options = listOf("All", "Fixes", "People", "Ideas", "Places"),
+                                    selected = filter,
+                                    onSelect = { filter = it },
                                 )
+                            }
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 120.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                memoryRows()
                             }
                         }
                     }
                 }
             }
 
-        }
-
-        if (filtered.isEmpty()) {
-            RootEmptyState(stateKey = if (query.isNotBlank()) "search" else filter) {
-                EmptyMemoriesArt(filter = filter, query = query)
+            if (filtered.isEmpty() && !search.expanded) {
+                RootEmptyState(stateKey = if (q.isNotEmpty()) "search" else filter) {
+                    EmptyMemoriesArt(filter = filter, query = q)
+                }
             }
         }
     }
-}
 }
