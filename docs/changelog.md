@@ -35,6 +35,8 @@ change, newest first within a category.
 
 ### Changed
 
+- Reworked the empty-state layout so Inbox, Projects, Memories, and Search share one fixed top-aligned artwork position; switching tabs now changes only the artwork and copy, not the empty-state placement.
+
 - Centered the empty states across Inbox, Projects, Memories, and Search so their artwork and messaging occupy the same centered position instead of appearing at different vertical offsets.
 
 - Removed the decorative Inbox and Search icons from their root tab top bars and let both titles use the same leading position as the other root-level screens, so switching tabs no longer makes the title appear to move.
