@@ -33,6 +33,13 @@ change, newest first within a category.
 - Added `docs/` changelog directory and a root `agents.md` with the project
   rules every agent/session must follow.
 
+### Changed
+
+- Removed the inert "Expressive style" tile from Settings → Appearance. It only
+  showed "Rounded · Roboto Flex" with no action or behavior; the actual rounded
+  expressive styling used across the app is untouched, and the Appearance
+  section keeps its normal spacing with just the Theme control.
+
 ### Fixed
 
 - Three-dot (MoreVert) overflow menus now open beside their button instead of
