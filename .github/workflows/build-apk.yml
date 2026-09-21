@@ -37,10 +37,38 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests
+        id: tests
         run: |
           set -o pipefail
           chmod +x ./gradlew
           ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee unit-tests.log
+
+      # Kotlin compiler diagnostics otherwise only exist inside the job log.
+      - name: Surface compile errors as annotations
+        if: failure() && steps.tests.outcome == 'failure'
+        run: |
+          python3 - <<'PY'
+          import pathlib, re
+          def esc(s):
+              return s.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          log = pathlib.Path('unit-tests.log')
+          text = log.read_text(errors='replace') if log.exists() else ''
+          if not text:
+              print('::error title=unit-test-log-missing::unit-tests.log was not produced')
+              raise SystemExit(0)
+          # Kotlin emits "e: file:///abs/path/File.kt:12:34 message"
+          pat = re.compile(r'^e: (?:file://)?(?P<file>[^:]+):(?P<line>\d+):(?P<col>\d+):? (?P<msg>.*)$', re.M)
+          shown = 0
+          for m in pat.finditer(text):
+              if shown >= 40:
+                  break
+              print('::error file=%s,line=%s,col=%s,title=kotlin-compile::%s'
+                    % (m['file'], m['line'], m['col'], esc(m['msg'])))
+              shown += 1
+          print('surfaced %d compiler errors' % shown)
+          if shown == 0:
+              print('::error title=unit-test-tail::' + esc('\n'.join(text.splitlines()[-80:])))
+          PY
 
       - name: Run lint
         id: lint
