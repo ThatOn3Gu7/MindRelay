@@ -398,7 +398,6 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
         topBar = {
             MindTopBar(
                 title = "Search",
-                preserveLeadingSpace = true,
             )
         },
     ) { _ ->

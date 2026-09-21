@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,7 +52,6 @@ fun MindTopBar(
     onBack: (() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
     leadingIcon: ImageVector? = null,
-    preserveLeadingSpace: Boolean = false,
     actions: List<Pair<ImageVector, () -> Unit>> = emptyList(),
     modifier: Modifier = Modifier,
     overflowMenu: (@Composable () -> Unit)? = null,
@@ -73,7 +71,6 @@ fun MindTopBar(
                 onBack != null -> IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                 }
-                preserveLeadingSpace -> Spacer(modifier = Modifier.size(24.dp))
             }
         },
         actions = {
