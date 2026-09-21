@@ -111,11 +111,12 @@ fun MindTopBar(
  * The one top offset for every root empty state, measured from the top of the
  * tab content area (just under the top bar).
  *
- * Every tab now pins the same search field, so the collapsed header band is the
- * same height everywhere (8 + 56 + 8 = 72dp) and this only has to clear that,
- * leaving a 24dp gap. Change this one number to move all of them together.
+ * Every tab pins the same search field plus the same-height filter chips, so
+ * the collapsed header band is the same everywhere (8 + 56 + 8 + 8 + 32 + 8 =
+ * 120dp) and this clears it with a 24dp gap. Change this one number to move all
+ * of them together.
  */
-private val RootEmptyStateTop = 96.dp
+private val RootEmptyStateTop = 144.dp
 
 /**
  * Shared empty-state slot for the root tabs.

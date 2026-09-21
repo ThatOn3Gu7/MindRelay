@@ -218,6 +218,10 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
 
+                // Filter chips stay pinned under the field, not only inside the
+                // expanded search, so the active filter is always visible.
+                InboxFilterChips(filter = filter, onSelect = { filter = it })
+
                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -229,27 +233,12 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
 
                     // Expanded search covers the list instead of pushing it.
                     MindSearchResults(expanded = search.expanded) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState())
-                                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                ConnectedChipGroup(
-                                    options = listOf("All", "Ideas", "To-dos", "Questions", "Voice"),
-                                    selected = filter,
-                                    onSelect = { filter = it },
-                                )
-                            }
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 120.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                inboxRows()
-                            }
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 120.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            inboxRows()
                         }
                     }
                 }
@@ -261,5 +250,23 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
                 }
             }
         }
+    }
+}
+
+/** The tab's filter chips, pinned under the search field in both states. */
+@Composable
+private fun InboxFilterChips(filter: String, onSelect: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        ConnectedChipGroup(
+            options = listOf("All", "Ideas", "To-dos", "Questions", "Voice"),
+            selected = filter,
+            onSelect = onSelect,
+        )
     }
 }

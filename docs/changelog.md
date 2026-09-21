@@ -35,6 +35,11 @@ change, newest first within a category.
 
 ### Changed
 
+- Filter chips are back on Inbox, Projects and Memories, pinned under the search
+  field and visible in both the collapsed and expanded states — so the active
+  filter is never hidden, and the expanded search no longer repeats the same
+  chips. The navigation bar is reordered to Home, Inbox, Memories, Projects.
+
 - Search is no longer a separate tab. Every tab now carries the same search
   field: Inbox, Projects and Memories search their own entries, and Home runs a
   universal search across projects, session entries, tasks, memories and

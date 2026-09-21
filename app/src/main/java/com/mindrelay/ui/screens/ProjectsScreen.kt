@@ -280,6 +280,10 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
 
+                // Filter chips stay pinned under the field, not only inside the
+                // expanded search, so the active filter is always visible.
+                ProjectsFilterChips(filter = filter, onSelect = { filter = it })
+
                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     // Smooth animated content transition for the list below the field
                     AnimatedContent(
@@ -314,27 +318,12 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
 
                     // Expanded search covers the list instead of pushing it.
                     MindSearchResults(expanded = search.expanded) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState())
-                                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                ConnectedChipGroup(
-                                    options = listOf("Active", "Paused", "Done"),
-                                    selected = filter,
-                                    onSelect = { filter = it },
-                                )
-                            }
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 120.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                            ) {
-                                projectRows()
-                            }
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 120.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            projectRows()
                         }
                     }
                 }
@@ -346,5 +335,23 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
                 }
             }
         }
+    }
+}
+
+/** The tab's filter chips, pinned under the search field in both states. */
+@Composable
+private fun ProjectsFilterChips(filter: String, onSelect: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ConnectedChipGroup(
+            options = listOf("Active", "Paused", "Done"),
+            selected = filter,
+            onSelect = onSelect,
+        )
     }
 }

@@ -242,6 +242,10 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
 
+                // Filter chips stay pinned under the field, not only inside the
+                // expanded search, so the active filter is always visible.
+                MemoriesFilterChips(filter = filter, onSelect = { filter = it })
+
                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     AnimatedContent(
                         targetState = filter, // Animate crossfade only when filter changes for smoothness
@@ -274,27 +278,12 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
 
                     // Expanded search covers the list instead of pushing it.
                     MindSearchResults(expanded = search.expanded) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState())
-                                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                ConnectedChipGroup(
-                                    options = listOf("All", "Fixes", "People", "Ideas", "Places"),
-                                    selected = filter,
-                                    onSelect = { filter = it },
-                                )
-                            }
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 120.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                memoryRows()
-                            }
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 120.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            memoryRows()
                         }
                     }
                 }
@@ -306,5 +295,23 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
                 }
             }
         }
+    }
+}
+
+/** The tab's filter chips, pinned under the search field in both states. */
+@Composable
+private fun MemoriesFilterChips(filter: String, onSelect: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ConnectedChipGroup(
+            options = listOf("All", "Fixes", "People", "Ideas", "Places"),
+            selected = filter,
+            onSelect = onSelect,
+        )
     }
 }

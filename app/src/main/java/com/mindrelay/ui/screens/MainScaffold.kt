@@ -30,7 +30,8 @@ import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 
 /**
- * The 4-destination navigation bar used by Home, Inbox, Projects and Memories.
+ * The 4-destination navigation bar, in reading order: Home, Inbox, Memories,
+ * Projects.
  * 80dp tall on surfaceContainer, extended through the gesture inset.
  *
  * Search is no longer a destination: every tab carries its own search field
@@ -49,8 +50,8 @@ fun MindNavBar(
     ) {
         NavDest(nav, MindScreen.HOME, "Home", Icons.Rounded.Home, selected)
         NavDest(nav, MindScreen.INBOX, "Inbox", Icons.Rounded.Inbox, selected)
-        NavDest(nav, MindScreen.PROJECTS, "Projects", Icons.Rounded.FolderOpen, selected)
         NavDest(nav, MindScreen.MEMORIES, "Memories", Icons.Rounded.Bookmark, selected)
+        NavDest(nav, MindScreen.PROJECTS, "Projects", Icons.Rounded.FolderOpen, selected)
     }
 }
 
