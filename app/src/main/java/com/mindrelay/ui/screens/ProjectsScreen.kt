@@ -352,4 +352,4 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
         }
     }
 }
-
+}
