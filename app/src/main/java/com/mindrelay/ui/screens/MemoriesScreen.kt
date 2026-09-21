@@ -264,7 +264,8 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
         topBar = { MindTopBar(title = "Memories") },
         fab = { QuickCaptureFab(nav) },
     ) { _ ->
-        Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
             // Pinned Top Section: Search Bar and Chips
             Column(
                 modifier = Modifier
@@ -316,9 +317,7 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
             ) { currentFilter ->
                 // Note: We still use 'filtered' which respects both 'currentFilter' and 'query'
                 if (filtered.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        EmptyMemoriesArt(filter = currentFilter, query = query)
-                    }
+                    Spacer(modifier = Modifier.fillMaxSize())
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -335,6 +334,12 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
                             )
                         }
                     }
+                }
+            }
+
+            if (filtered.isEmpty()) {
+                RootEmptyState {
+                    EmptyMemoriesArt(filter = filter, query = query)
                 }
             }
         }
