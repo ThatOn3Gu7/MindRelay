@@ -457,7 +457,7 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
                 // is actually used by the transition.
                 key(targetFilter) {
                     if (rows.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             EmptySearchArt(query = q)
                         }
                     } else {

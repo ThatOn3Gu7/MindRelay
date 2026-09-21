@@ -316,7 +316,7 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
             ) { currentFilter ->
                 // Note: We still use 'filtered' which respects both 'currentFilter' and 'query'
                 if (filtered.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         EmptyMemoriesArt(filter = currentFilter, query = query)
                     }
                 } else {

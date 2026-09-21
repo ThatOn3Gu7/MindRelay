@@ -318,7 +318,7 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
 
                 if (filtered.isEmpty()) {
                     // Custom empty state inside the animated container
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         EmptyProjectsArt(currentFilter)
                     }
                 } else {
