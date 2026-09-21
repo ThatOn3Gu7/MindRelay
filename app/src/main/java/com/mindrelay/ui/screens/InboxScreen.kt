@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckBox
 import androidx.compose.material.icons.rounded.Help
-import androidx.compose.material.icons.rounded.Inbox
 import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.Notes
@@ -224,7 +223,7 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
         topBar = {
             MindTopBar(
                 title = "Inbox",
-                leadingIcon = Icons.Rounded.Inbox,
+                preserveLeadingSpace = true,
             )
         },
         fab = { QuickCaptureFab(nav) },

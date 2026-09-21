@@ -35,6 +35,8 @@ change, newest first within a category.
 
 ### Changed
 
+- Removed the decorative Inbox and Search icons from their root tab top bars while preserving the leading slot width, so both titles stay exactly aligned with their previous positions.
+
 - Removed the inert "Expressive style" tile from Settings → Appearance. It only
   showed "Rounded · Roboto Flex" with no action or behavior; the actual rounded
   expressive styling used across the app is untouched, and the Appearance
