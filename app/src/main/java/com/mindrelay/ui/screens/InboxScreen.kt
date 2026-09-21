@@ -196,11 +196,6 @@ private fun ExpressiveInboxItem(
             }
         }
 
-        if (filtered.isEmpty()) {
-            RootEmptyState {
-                EmptyInboxArt()
-            }
-        }
     }
 }
 
@@ -268,6 +263,12 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
                         }
                     )
                 }
+            }
+        }
+
+        if (filtered.isEmpty()) {
+            RootEmptyState {
+                EmptyInboxArt()
             }
         }
     }
