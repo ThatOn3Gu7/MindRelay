@@ -38,6 +38,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -316,31 +317,35 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
                 },
                 label = "projects_tab_transition",
                 modifier = Modifier.weight(1f)
-            ) {
-                // The filtered list already reflects the selected filter, so the
-                // target-state parameter is deliberately not declared.
-                if (filtered.isEmpty()) {
-                    Spacer(modifier = Modifier.fillMaxSize())
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        // Spacious padding for the modern, expressive feel
-                        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        items(filtered, key = { it.id }) { p ->
-                            val count = sessionCounts[p.id] ?: 0
-                            ExpressiveProjectCard(
-                                headline = p.name,
-                                status = p.status,
-                                sessionCount = count,
-                                lastWorked = workedAgo(p.lastWorkedAt),
-                                currentState = p.currentState,
-                                nextAction = p.nextAction,
-                                onClick = { 
-                                    nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, p.id.toString()) 
-                                }
-                            )
+            ) { targetFilter ->
+                // Key the content on the target filter so each filter's list has
+                // its own identity for AnimatedContent, and the target-state
+                // parameter is actually used by the transition.
+                key(targetFilter) {
+                    // The filtered list already reflects the selected filter.
+                    if (filtered.isEmpty()) {
+                        Spacer(modifier = Modifier.fillMaxSize())
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            // Spacious padding for the modern, expressive feel
+                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            items(filtered, key = { it.id }) { p ->
+                                val count = sessionCounts[p.id] ?: 0
+                                ExpressiveProjectCard(
+                                    headline = p.name,
+                                    status = p.status,
+                                    sessionCount = count,
+                                    lastWorked = workedAgo(p.lastWorkedAt),
+                                    currentState = p.currentState,
+                                    nextAction = p.nextAction,
+                                    onClick = {
+                                        nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, p.id.toString())
+                                    }
+                                )
+                            }
                         }
                     }
                 }

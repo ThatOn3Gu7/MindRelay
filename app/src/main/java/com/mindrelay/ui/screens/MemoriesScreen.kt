@@ -43,6 +43,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -314,25 +315,29 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
                 },
                 label = "memories_tab_transition",
                 modifier = Modifier.weight(1f)
-            ) {
-                // The filtered list already reflects the selected filter and query,
-                // so the target-state parameter is deliberately not declared.
-                if (filtered.isEmpty()) {
-                    Spacer(modifier = Modifier.fillMaxSize())
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        items(filtered, key = { it.id }) { m ->
-                            val tags = m.tags.split(" ").filter { it.startsWith("#") }.joinToString(" ")
-                            ExpressiveMemoryItem(
-                                headline = m.title,
-                                supporting = "${typeLabel(m.type)}${if (tags.isNotBlank()) " · $tags" else ""}",
-                                icon = typeIcon(m.type),
-                                onClick = { nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, m.id.toString()) }
-                            )
+            ) { targetFilter ->
+                // Key the content on the target filter so each filter's list has
+                // its own identity for AnimatedContent, and the target-state
+                // parameter is actually used by the transition.
+                key(targetFilter) {
+                    // The filtered list already reflects the selected filter and query.
+                    if (filtered.isEmpty()) {
+                        Spacer(modifier = Modifier.fillMaxSize())
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            items(filtered, key = { it.id }) { m ->
+                                val tags = m.tags.split(" ").filter { it.startsWith("#") }.joinToString(" ")
+                                ExpressiveMemoryItem(
+                                    headline = m.title,
+                                    supporting = "${typeLabel(m.type)}${if (tags.isNotBlank()) " · $tags" else ""}",
+                                    icon = typeIcon(m.type),
+                                    onClick = { nav.navigate(MindScreen.MEMORY_DETAIL, MindTransition.SLIDE_RIGHT, m.id.toString()) }
+                                )
+                            }
                         }
                     }
                 }

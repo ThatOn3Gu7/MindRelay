@@ -55,10 +55,11 @@ change, newest first within a category.
 ### Fixed
 
 - The CI build stopped at the lint step: the Memories and Projects tab lists
-  declared an `AnimatedContent` target-state parameter they never used
-  (`_` and `currentFilter`), which `UnusedContentLambdaTargetStateParameter`
-  reports as an error. Both lambdas now omit the parameter — the crossfade,
-  filter chips and lists are unchanged.
+  never used the `AnimatedContent` target-state parameter, which
+  `UnusedContentLambdaTargetStateParameter` reports as an error. Renaming it to
+  `_` or dropping the declaration does not satisfy the check — the parameter has
+  to be referenced — so both lists now key their content on the target filter,
+  matching the Search screen. Filter chips, lists and crossfades are unchanged.
 - CI now mirrors every lint finding from the full lint text report into
   check-run annotations, so a failing run shows all of them (AGP prints only
   the first failure to the console log).
