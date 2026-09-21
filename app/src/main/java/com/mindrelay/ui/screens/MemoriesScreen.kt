@@ -314,8 +314,8 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
                 },
                 label = "memories_tab_transition",
                 modifier = Modifier.weight(1f)
-            ) { currentFilter ->
-                // Note: We still use 'filtered' which respects both 'currentFilter' and 'query'
+            ) { _ ->
+                // The filtered list already reflects the selected filter and query.
                 if (filtered.isEmpty()) {
                     Spacer(modifier = Modifier.fillMaxSize())
                 } else {
