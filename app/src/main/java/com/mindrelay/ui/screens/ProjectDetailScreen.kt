@@ -402,18 +402,7 @@ fun ProjectDetailScreen(vm: AppViewModel, nav: MindNavController, projectId: Lon
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     SectionLabel("Recent sessions")
                     if (sessions.isEmpty()) {
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerLow,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "No sessions yet. Resume to start one.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
+                        SectionEmptyPlaceholder("No sessions yet. Resume to start one.")
                     } else {
                         sessions.forEach { s ->
                             ExpressiveProjectListItem(
@@ -432,18 +421,7 @@ fun ProjectDetailScreen(vm: AppViewModel, nav: MindNavController, projectId: Lon
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     SectionLabel("Linked memories", size = 18)
                     if (linked.isEmpty()) {
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerLow,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "None linked yet.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
+                        SectionEmptyPlaceholder("None linked yet.")
                     } else {
                         linked.forEach { m ->
                             ExpressiveProjectListItem(

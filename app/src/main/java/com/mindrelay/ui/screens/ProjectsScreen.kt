@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -18,19 +19,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,7 +48,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,6 +58,9 @@ import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
 import com.mindrelay.ui.components.ConnectedChipGroup
+import com.mindrelay.ui.search.MindSearchField
+import com.mindrelay.ui.search.MindSearchResults
+import com.mindrelay.ui.search.rememberMindSearchState
 import com.mindrelay.util.workedAgo
 
 private fun statusLabel(s: ProjectStatus) = when (s) {
@@ -72,68 +76,23 @@ private fun EmptyProjectsArt(filter: String) {
         "Done" -> Icons.Rounded.CheckCircle
         else -> Icons.Rounded.FolderOpen
     }
-    
     val headline = when (filter) {
         "Paused" -> "Nothing on hold"
         "Done" -> "No finished projects yet"
         else -> "Ready for a new venture"
     }
-    
     val body = when (filter) {
         "Paused" -> "Projects that need a break will safely wait for you here."
         "Done" -> "Your completed missions and accomplishments will be logged here."
         else -> "Create an active project to track sessions, state, and next actions."
     }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp, horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Expressive ambient icon container
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(140.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(40.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                modifier = Modifier.size(120.dp)
-            ) {}
-            Surface(
-                shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier.size(80.dp)
-            ) {}
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Text(
-            text = headline,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
-        )
-    }
+    RootEmptyArt(
+        icon = icon,
+        headline = headline,
+        body = body,
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        onContainerColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    )
 }
 
 @Composable
@@ -270,6 +229,7 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
     }
     
     var filter by remember { mutableStateOf("Active") }
+    val search = rememberMindSearchState()
 
     TabScaffold(
         nav = nav,
@@ -277,79 +237,121 @@ fun ProjectsScreen(vm: AppViewModel, nav: MindNavController) {
         topBar = {
             MindTopBar(
                 title = "Projects",
-                actions = listOf(
-                    Icons.Rounded.Search to { nav.navigate(MindScreen.SEARCH, MindTransition.SLIDE_RIGHT) },
-                ),
             )
         },
         fab = { QuickCaptureFab(nav) },
     ) { _ ->
-        val filtered = when (filter) {
-            "Paused" -> projects.filter { it.status == ProjectStatus.PAUSED }
-            "Done" -> projects.filter { it.status == ProjectStatus.DONE }
-            else -> projects.filter { it.status == ProjectStatus.ACTIVE }
+        val q = search.query.trim()
+        val filtered = projects
+            .filter { p ->
+                when (filter) {
+                    "Paused" -> p.status == ProjectStatus.PAUSED
+                    "Done" -> p.status == ProjectStatus.DONE
+                    else -> p.status == ProjectStatus.ACTIVE
+                }
+            }
+            .filter { p ->
+                q.isEmpty() || "${p.name} ${p.currentState} ${p.nextAction}".contains(q, ignoreCase = true)
+            }
+
+        // The project list, shared by the collapsed screen and the expanded search.
+        val projectRows: LazyListScope.() -> Unit = {
+            items(filtered, key = { it.id }) { p ->
+                val count = sessionCounts[p.id] ?: 0
+                ExpressiveProjectCard(
+                    headline = p.name,
+                    status = p.status,
+                    sessionCount = count,
+                    lastWorked = workedAgo(p.lastWorkedAt),
+                    currentState = p.currentState,
+                    nextAction = p.nextAction,
+                    onClick = {
+                        nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, p.id.toString())
+                    }
+                )
+            }
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
-            // Fixed Top Filter Row - keeps chips visible while scrolling
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ConnectedChipGroup(
-                    options = listOf("Active", "Paused", "Done"),
-                    selected = filter,
-                    onSelect = { filter = it },
+                MindSearchField(
+                    state = search,
+                    placeholder = "Search projects",
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
-            }
 
-            // Smooth animated content transition for the list below the chips
-            AnimatedContent(
-                targetState = filter,
-                transitionSpec = {
-                    (fadeIn(animationSpec = tween(250, delayMillis = 50)) +
-                        scaleIn(initialScale = 0.95f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f)))
-                        .togetherWith(fadeOut(animationSpec = tween(150)))
-                },
-                label = "projects_tab_transition",
-                modifier = Modifier.weight(1f)
-            ) { currentFilter ->
-                if (filtered.isEmpty()) {
-                    Spacer(modifier = Modifier.fillMaxSize())
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        // Spacious padding for the modern, expressive feel
-                        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        items(filtered, key = { it.id }) { p ->
-                            val count = sessionCounts[p.id] ?: 0
-                            ExpressiveProjectCard(
-                                headline = p.name,
-                                status = p.status,
-                                sessionCount = count,
-                                lastWorked = workedAgo(p.lastWorkedAt),
-                                currentState = p.currentState,
-                                nextAction = p.nextAction,
-                                onClick = { 
-                                    nav.navigate(MindScreen.PROJECT_DETAIL, MindTransition.SLIDE_RIGHT, p.id.toString()) 
+                // Filter chips stay pinned under the field, not only inside the
+                // expanded search, so the active filter is always visible.
+                ProjectsFilterChips(filter = filter, onSelect = { filter = it })
+
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    // Smooth animated content transition for the list below the field
+                    AnimatedContent(
+                        targetState = filter,
+                        transitionSpec = {
+                            (fadeIn(animationSpec = tween(250, delayMillis = 50)) +
+                                scaleIn(initialScale = 0.95f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f)))
+                                .togetherWith(fadeOut(animationSpec = tween(150)))
+                        },
+                        label = "projects_tab_transition",
+                        modifier = Modifier.fillMaxSize()
+                    ) { targetFilter ->
+                        // Key the content on the target filter so each filter's list has
+                        // its own identity for AnimatedContent, and the target-state
+                        // parameter is actually used by the transition.
+                        key(targetFilter) {
+                            // The filtered list already reflects the selected filter.
+                            if (filtered.isEmpty()) {
+                                Spacer(modifier = Modifier.fillMaxSize())
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    // Spacious padding for the modern, expressive feel
+                                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 120.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                ) {
+                                    projectRows()
                                 }
-                            )
+                            }
+                        }
+                    }
+
+                    // Expanded search covers the list instead of pushing it.
+                    MindSearchResults(expanded = search.expanded) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 120.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            projectRows()
                         }
                     }
                 }
             }
 
-            if (filtered.isEmpty()) {
-                RootEmptyState {
+            if (filtered.isEmpty() && !search.expanded) {
+                RootEmptyState(stateKey = filter) {
                     EmptyProjectsArt(filter)
                 }
             }
         }
     }
 }
+
+/** The tab's filter chips, pinned under the search field in both states. */
+@Composable
+private fun ProjectsFilterChips(filter: String, onSelect: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ConnectedChipGroup(
+            options = listOf("Active", "Paused", "Done"),
+            selected = filter,
+            onSelect = onSelect,
+        )
+    }
 }

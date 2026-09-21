@@ -18,7 +18,7 @@ enum class MindTransition {
 
 @Immutable
 enum class MindScreen {
-    HOME, INBOX, PROJECTS, MEMORIES, SEARCH,
+    HOME, INBOX, MEMORIES, PROJECTS,
     QUICK_CAPTURE, CAPTURE_DETAIL, PROJECT_DETAIL, SESSION, END_SESSION,
     MEMORY_DETAIL, NEW_MEMORY, NEW_PROJECT, SETTINGS, DATA_BACKUP,
 }
@@ -31,7 +31,7 @@ data class MindRoute(val screen: MindScreen, val arg: String? = null)
 data class NavChange(val transition: MindTransition, val backward: Boolean)
 
 /**
- * Owns the in-app back stack (5 main tabs + push screens). Because every screen
+ * Owns the in-app back stack (4 main tabs + push screens). Because every screen
  * is driven from a single state list, the system back gesture pops through the
  * same path as the on-screen back arrows and the entry transition plays in reverse.
  */

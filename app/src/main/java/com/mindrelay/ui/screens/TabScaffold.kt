@@ -15,7 +15,7 @@ import com.mindrelay.nav.MindNavController
 import com.mindrelay.nav.MindScreen
 
 /**
- * Shared scaffold for the five tab screens: top bar + scrollable content +
+ * Shared scaffold for the four tab screens: top bar + scrollable content +
  * bottom navigation bar + an optional FAB.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

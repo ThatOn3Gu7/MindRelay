@@ -37,15 +37,79 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests
+        id: tests
         run: |
           set -o pipefail
           chmod +x ./gradlew
           ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee unit-tests.log
 
+      # Kotlin compiler diagnostics otherwise only exist inside the job log.
+      - name: Surface compile errors as annotations
+        if: failure() && steps.tests.outcome == 'failure'
+        run: |
+          python3 - <<'PY'
+          import pathlib, re
+          def esc(s):
+              return s.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          log = pathlib.Path('unit-tests.log')
+          text = log.read_text(errors='replace') if log.exists() else ''
+          if not text:
+              print('::error title=unit-test-log-missing::unit-tests.log was not produced')
+              raise SystemExit(0)
+          # Kotlin emits "e: file:///abs/path/File.kt:12:34 message"
+          pat = re.compile(r'^e: (?:file://)?(?P<file>[^:]+):(?P<line>\d+):(?P<col>\d+):? (?P<msg>.*)$', re.M)
+          shown = 0
+          for m in pat.finditer(text):
+              if shown >= 40:
+                  break
+              print('::error file=%s,line=%s,col=%s,title=kotlin-compile::%s'
+                    % (m['file'], m['line'], m['col'], esc(m['msg'])))
+              shown += 1
+          print('surfaced %d compiler errors' % shown)
+          if shown == 0:
+              print('::error title=unit-test-tail::' + esc('\n'.join(text.splitlines()[-80:])))
+          PY
+
       - name: Run lint
+        id: lint
         run: |
           set -o pipefail
           ./gradlew :app:lintDebug --no-daemon --stacktrace 2>&1 | tee lint.log
+
+      # AGP prints only the *first* lint failure to the console log; the full
+      # list lives in the lint text report. Mirror every finding into check-run
+      # annotations so the complete list shows up on the run/PR page and via the
+      # plain REST API (job logs and artifacts are not always reachable).
+      - name: Surface lint findings as annotations
+        if: failure() && steps.lint.outcome == 'failure'
+        run: |
+          python3 - <<'PY'
+          import pathlib, re
+          def esc(s):
+              return s.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          reports = sorted(pathlib.Path('app/build/reports').glob('lint-results-*.txt'))
+          src = reports[0] if reports else pathlib.Path('lint.log')
+          text = src.read_text(errors='replace') if src.exists() else ''
+          print('diagnostics source: %s (%d bytes)' % (src, len(text)))
+          if not text:
+              print('::error title=lint-report-missing::no lint text report or lint.log found')
+              raise SystemExit(0)
+          pat = re.compile(r'^(?P<file>.+?)(?::(?P<line>\d+))?: (?P<sev>Error|Fatal): (?P<msg>.*)$', re.M)
+          shown = 0
+          for m in pat.finditer(text):
+              if shown >= 40:
+                  break
+              print('::error file=%s,line=%s,title=lint-%s::%s'
+                    % (m['file'], m['line'] or 1, m['sev'], esc(m['msg'])))
+              shown += 1
+          total = re.search(r'^(\d+) errors?, (\d+) warnings?', text, re.M)
+          if total:
+              print('::notice title=lint-summary::%s errors, %s warnings (report: %s)'
+                    % (total.group(1), total.group(2), src))
+          if shown == 0:
+              print('::error title=lint-report-tail::' + esc('\n'.join(text.splitlines()[-80:])))
+          print('surfaced %d lint findings' % shown)
+          PY
 
       - name: Build debug APK
         run: |

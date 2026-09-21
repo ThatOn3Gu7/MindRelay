@@ -41,7 +41,6 @@ import com.mindrelay.ui.screens.NewProjectScreen
 import com.mindrelay.ui.screens.ProjectDetailScreen
 import com.mindrelay.ui.screens.ProjectsScreen
 import com.mindrelay.ui.screens.QuickCaptureScreen
-import com.mindrelay.ui.screens.SearchScreen
 import com.mindrelay.ui.screens.SessionScreen
 import com.mindrelay.ui.screens.SettingsScreen
 
@@ -117,7 +116,6 @@ private fun Screen(vm: AppViewModel, nav: MindNavController, route: MindRoute) {
         MindScreen.INBOX -> InboxScreen(vm, nav)
         MindScreen.PROJECTS -> ProjectsScreen(vm, nav)
         MindScreen.MEMORIES -> MemoriesScreen(vm, nav)
-        MindScreen.SEARCH -> SearchScreen(vm, nav)
         MindScreen.QUICK_CAPTURE -> QuickCaptureScreen(vm, nav, route.arg.asLongOrNull())
         MindScreen.CAPTURE_DETAIL -> CaptureDetailScreen(vm, nav, route.arg.asLongOrNull())
         MindScreen.PROJECT_DETAIL -> ProjectDetailScreen(vm, nav, route.arg.asLongOrNull())

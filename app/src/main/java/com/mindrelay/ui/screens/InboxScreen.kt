@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,6 +51,10 @@ import com.mindrelay.nav.MindNavController
 import com.mindrelay.nav.MindScreen
 import com.mindrelay.nav.MindTransition
 import com.mindrelay.ui.AppViewModel
+import com.mindrelay.ui.components.ConnectedChipGroup
+import com.mindrelay.ui.search.MindSearchField
+import com.mindrelay.ui.search.MindSearchResults
+import com.mindrelay.ui.search.rememberMindSearchState
 import com.mindrelay.util.relativeAgo
 
 private fun kindIcon(kind: CaptureKind): ImageVector = when (kind) {
@@ -71,58 +75,14 @@ private fun kindLabel(kind: CaptureKind): String = when (kind) {
 
 @Composable
 private fun EmptyInboxArt() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp, horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Custom composed art piece using standard material shapes and icons
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(140.dp)
-        ) {
-            // Background ambient ring
-            Surface(
-                shape = RoundedCornerShape(40.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.size(120.dp)
-            ) {}
-            // Inner vibrant ring
-            Surface(
-                shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(80.dp)
-            ) {}
-            // Centered icon
-            Icon(
-                imageVector = Icons.Rounded.Lightbulb,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Text(
-            text = "Your mind is clear",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Text(
-            text = "Nothing here right now. Capture a new thought, idea, or task and it will safely land here for sorting.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2f
-        )
-    }
+    RootEmptyArt(
+        icon = Icons.Rounded.Lightbulb,
+        headline = "Your mind is clear",
+        body = "Nothing here right now. Capture a new thought, idea, or task and it will " +
+            "safely land here for sorting.",
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        onContainerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    )
 }
 
 @Composable
@@ -209,14 +169,36 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
     val captures by repo.captures.active().collectAsStateWithLifecycle(initialValue = emptyList())
     var filter by remember { mutableStateOf("All") }
 
-    val filtered = when (filter) {
-        "Ideas" -> captures.filter { it.kind == CaptureKind.IDEA }
-        "To-dos" -> captures.filter { it.kind == CaptureKind.TODO }
-        "Questions" -> captures.filter { it.kind == CaptureKind.QUESTION }
-        "Voice" -> captures.filter { it.isVoice }
-        else -> captures
-    }
+    val search = rememberMindSearchState()
+
+    val q = search.query.trim()
+    val filtered = captures
+        .filter { c ->
+            when (filter) {
+                "Ideas" -> c.kind == CaptureKind.IDEA
+                "To-dos" -> c.kind == CaptureKind.TODO
+                "Questions" -> c.kind == CaptureKind.QUESTION
+                "Voice" -> c.isVoice
+                else -> true
+            }
+        }
+        .filter { c -> q.isEmpty() || "${c.text} ${c.detail}".contains(q, ignoreCase = true) }
     // -------------------------------------------------------------------------
+
+    // The inbox list, shared by the collapsed screen and the expanded search.
+    val inboxRows: LazyListScope.() -> Unit = {
+        items(filtered, key = { it.id }) { c ->
+            ExpressiveInboxItem(
+                headline = c.text,
+                supporting = "${kindLabel(c.kind)} · ${relativeAgo(c.createdAt)}" +
+                    if (c.isVoice) " · voice" else "",
+                icon = kindIcon(c.kind),
+                onClick = {
+                    nav.navigate(MindScreen.CAPTURE_DETAIL, MindTransition.SLIDE_RIGHT, c.id.toString())
+                }
+            )
+        }
+    }
 
     TabScaffold(
         nav = nav,
@@ -229,48 +211,62 @@ fun InboxScreen(vm: AppViewModel, nav: MindNavController) {
         fab = { QuickCaptureFab(nav) },
     ) { _ ->
         Box(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            // Kept padding tighter to address the sizing feedback
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    com.mindrelay.ui.components.ConnectedChipGroup(
-                        options = listOf("All", "Ideas", "To-dos", "Questions", "Voice"),
-                        selected = filter,
-                        onSelect = { filter = it },
-                    )
-                }
-            }
-            
-            if (filtered.isNotEmpty()) {
-                items(filtered, key = { it.id }) { c ->
-                    ExpressiveInboxItem(
-                        headline = c.text,
-                        supporting = "${kindLabel(c.kind)} · ${relativeAgo(c.createdAt)}" +
-                            if (c.isVoice) " · voice" else "",
-                        icon = kindIcon(c.kind),
-                        onClick = {
-                            nav.navigate(MindScreen.CAPTURE_DETAIL, MindTransition.SLIDE_RIGHT, c.id.toString())
-                        }
-                    )
-                }
-            }
-        }
+            Column(modifier = Modifier.fillMaxSize()) {
+                MindSearchField(
+                    state = search,
+                    placeholder = "Search the inbox",
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                )
 
-        if (filtered.isEmpty()) {
-            RootEmptyState {
-                EmptyInboxArt()
+                // Filter chips stay pinned under the field, not only inside the
+                // expanded search, so the active filter is always visible.
+                InboxFilterChips(filter = filter, onSelect = { filter = it })
+
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 120.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        inboxRows()
+                    }
+
+                    // Expanded search covers the list instead of pushing it.
+                    MindSearchResults(expanded = search.expanded) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 120.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            inboxRows()
+                        }
+                    }
+                }
+            }
+
+            if (filtered.isEmpty() && !search.expanded) {
+                RootEmptyState(stateKey = "inbox") {
+                    EmptyInboxArt()
+                }
             }
         }
     }
 }
+
+/** The tab's filter chips, pinned under the search field in both states. */
+@Composable
+private fun InboxFilterChips(filter: String, onSelect: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        ConnectedChipGroup(
+            options = listOf("All", "Ideas", "To-dos", "Questions", "Voice"),
+            selected = filter,
+            onSelect = onSelect,
+        )
+    }
 }

@@ -35,7 +35,32 @@ change, newest first within a category.
 
 ### Changed
 
-- Reworked the empty-state layout so Inbox, Projects, Memories, and Search share one fixed top-aligned artwork position; switching tabs now changes only the artwork and copy, not the empty-state placement.
+- Filter chips are back on Inbox, Projects and Memories, pinned under the search
+  field and visible in both the collapsed and expanded states — so the active
+  filter is never hidden, and the expanded search no longer repeats the same
+  chips. The navigation bar is reordered to Home, Inbox, Memories, Projects.
+
+- Search is no longer a separate tab. Every tab now carries the same search
+  field: Inbox, Projects and Memories search their own entries, and Home runs a
+  universal search across projects, session entries, tasks, memories and
+  captures, grouped into sections. Tapping a field focuses it and expands it
+  into a full-area search view that covers the list; the back arrow (or system
+  back, or the keyboard's done key) collapses it back into the field, playing
+  the same animation in reverse. Filter chips live inside the expanded view, and
+  the bottom navigation bar is down to four destinations.
+
+- The empty state now sits in the same spot on every root tab. Inbox, Projects,
+  Memories and Search all host it as an overlay at one shared offset
+  (`RootEmptyStateTop`, 144dp under the top bar — chosen to clear the tallest
+  header band, the Memories/Search search field + filter chips), and the artwork
+  is a single shared `RootEmptyArt`, so no screen can drift back to its own
+  padding or icon size. Switching tabs now reads as the icon swapping in place
+  rather than the block being redrawn somewhere else, and changing a filter chip
+  while a tab is empty crossfades and scales the artwork instead of popping.
+
+- Empty sections inside detail screens (Project detail's "Recent sessions" and
+  "Linked memories", Session's log) now render through one shared
+  `SectionEmptyPlaceholder` card, so all three read identically.
 
 - Removed the decorative Inbox and Search icons from their root tab top bars and let both titles use the same leading position as the other root-level screens, so switching tabs no longer makes the title appear to move.
 
@@ -53,6 +78,16 @@ change, newest first within a category.
   field itself and its searching/filtering behavior are unchanged.
 
 ### Fixed
+
+- The CI build stopped at the lint step: the Memories and Projects tab lists
+  never used the `AnimatedContent` target-state parameter, which
+  `UnusedContentLambdaTargetStateParameter` reports as an error. Renaming it to
+  `_` or dropping the declaration does not satisfy the check — the parameter has
+  to be referenced — so both lists now key their content on the target filter,
+  matching the Search screen. Filter chips, lists and crossfades are unchanged.
+- CI now mirrors every lint finding from the full lint text report into
+  check-run annotations, so a failing run shows all of them (AGP prints only
+  the first failure to the console log).
 
 - Three-dot (MoreVert) overflow menus now open beside their button instead of
   in a corner of the screen. The menus on Capture Detail, Memory Detail,

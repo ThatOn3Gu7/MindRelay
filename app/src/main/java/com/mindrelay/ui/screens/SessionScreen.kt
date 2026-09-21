@@ -369,18 +369,10 @@ fun SessionScreen(vm: AppViewModel, nav: MindNavController, sessionId: Long?) {
                     ) {
                         if (filtered.isEmpty()) {
                             item {
-                                Surface(
-                                    shape = RoundedCornerShape(20.dp),
-                                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        "Nothing logged yet. Tap + to capture a note, discovery, question, decision or task.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(16.dp)
-                                    )
-                                }
+                                SectionEmptyPlaceholder(
+                                    "Nothing logged yet. Tap + to capture a note, discovery, " +
+                                        "question, decision or task."
+                                )
                             }
                         }
                         items(filtered, key = { it.id }) { e ->
