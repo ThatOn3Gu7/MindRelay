@@ -34,7 +34,6 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -277,7 +276,6 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
                     onValueChange = { query = it },
                     placeholder = { Text("Search memories...") },
                     leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                    trailingIcon = { Icon(Icons.Rounded.Tune, contentDescription = null) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),

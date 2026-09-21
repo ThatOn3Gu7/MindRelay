@@ -398,7 +398,7 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
         topBar = {
             MindTopBar(
                 title = "Search",
-                onBack = { nav.popToRoot() },
+                leadingIcon = Icons.Rounded.Search,
             )
         },
     ) { _ ->

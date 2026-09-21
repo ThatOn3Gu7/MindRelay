@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -39,6 +40,9 @@ import com.mindrelay.nav.MindNavController
  *   Callers pass [MindOverflowMenu], which renders the three-dot button and its
  *   menu(s) inside one anchored [Box], so the popup opens beside/below the
  *   button instead of inheriting the full screen as its anchor.
+ * @param leadingIcon optional non-clickable icon rendered in place of the
+ *   navigation slot, for root-level tabs (e.g. Inbox, Search) where the leading
+ *   glyph is pure visual context rather than a back/close action.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -47,6 +51,7 @@ fun MindTopBar(
     nav: MindNavController? = null,
     onBack: (() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
+    leadingIcon: ImageVector? = null,
     actions: List<Pair<ImageVector, () -> Unit>> = emptyList(),
     modifier: Modifier = Modifier,
     overflowMenu: (@Composable () -> Unit)? = null,
@@ -55,6 +60,11 @@ fun MindTopBar(
         title = { Text(title, style = MaterialTheme.typography.titleLarge) },
         navigationIcon = {
             when {
+                leadingIcon != null -> Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
                 onClose != null -> IconButton(onClick = onClose) {
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Close")
                 }

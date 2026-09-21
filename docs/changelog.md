@@ -40,6 +40,14 @@ change, newest first within a category.
   expressive styling used across the app is untouched, and the Appearance
   section keeps its normal spacing with just the Theme control.
 
+- Inbox and Search no longer show a back arrow in their top bars: both are
+  root-level tabs, so their leading slot now shows a static, non-clickable
+  contextual icon (`Inbox` / `Search`) via a new reusable `MindTopBar`
+  `leadingIcon` slot. Back/close buttons on other screens are unchanged.
+
+- Removed the inert tuning (`Tune`) icon from the Memories search field; the
+  field itself and its searching/filtering behavior are unchanged.
+
 ### Fixed
 
 - Three-dot (MoreVert) overflow menus now open beside their button instead of
