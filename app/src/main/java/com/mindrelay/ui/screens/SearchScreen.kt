@@ -506,3 +506,4 @@ fun SearchScreen(vm: AppViewModel, nav: MindNavController) {
         }
     }
 }
+}
