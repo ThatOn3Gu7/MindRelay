@@ -345,3 +345,4 @@ fun MemoriesScreen(vm: AppViewModel, nav: MindNavController) {
         }
     }
 }
+}
