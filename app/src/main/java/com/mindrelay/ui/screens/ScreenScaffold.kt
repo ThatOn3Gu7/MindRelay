@@ -93,6 +93,25 @@ fun MindTopBar(
 }
 
 /**
+ * Shared empty-state slot for root tabs. The artwork composables carry their
+ * own 48dp top padding, so this 128dp offset places the artwork itself at the
+ * same vertical position on every root tab regardless of header controls.
+ */
+private val RootEmptyStateTopOffset = 128.dp
+
+@Composable
+fun RootEmptyState(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = RootEmptyStateTopOffset),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        content()
+    }
+}
+
+/**
  * Overflow control anchored to a three-dot ("MoreVert") button. Renders the
  * button and whatever the caller places in [menuContent] inside a single
  * Box, so the DropdownMenus in [menuContent] anchor their popups to that box —
